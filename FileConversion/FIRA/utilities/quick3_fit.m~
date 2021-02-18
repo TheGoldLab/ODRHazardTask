@@ -1,0 +1,128 @@
+function [fits_,sems_,stats_,preds_]=quick3_fit(data, error_flag)
+%
+% QUICK_FIT fits a weibull function to psychometric data using
+%   maximum likelihood maximization under binomial assumptions. It uses
+%   quick_err for error calculation. The three parameters returned in
+%   fits_ are alpha (threshold), beta (slope/shape term) and lambda (the
+%   lapse rate). Assumes a guess rate (gamma) of 0.5, as in a 2AFC task.
+%
+% Usage: [fits_,sems_,stats_,preds_]=quick3_fit(data, error_flag)
+%
+% Arguments:
+%  data       ... in 3 columns...
+%                   data(1) = x
+%                   data(2) = fraction correct (0..1)
+%                   data(3) = number of observations
+%  error_flag ... specifies whether monte carlo should 
+%                   be used to calculate sems
+%
+% Returns:
+%  fits_      ... [alpha; beta; lambda]
+%                   alpha is threshold
+%                   beta is the slope/shape term
+%                   lambda is the lapse rate
+%  sems_      ... Standard errors of the fits. Approximated using the
+%                   numerical HESSIAN returned by fmincon (default)
+%                   or monte carlo method (if error_flag is given)
+%  stats_     ... [fitLLR Deviance p]
+%                   fitLLR is the log likelihood of obtaining the 
+%                       data given the fit (returned by quick3_err)
+%                   Deviance is 2(dataLLR - fitLLR)
+%                   p is probability from chi^2 pdf with df = #blocks-3
+%  preds_     ... A vector of the probability of making a correct 
+%                   choice given the fit
+
+% 	4/1/95 to use optimization toolbox, contsrained fit -- nope
+%  		old code is quickfit_no_opt.m
+% 	12/11/96  jdr & mns fixed guessing bug (we hope) 
+%	7/13/01 jig updated, cleaned up and changed fmins to fmincon
+%   9/8/05 updated by jig to include stats
+
+global Data;
+
+if nargin < 1 || isempty(data)
+    return;
+end
+Data = data;
+
+% use linear interpolation to guess alpha
+% next line takes x and %-cor columns, flips them and interpolates along
+% x to find the value corresponding to .8 correct.  The interpolation
+% requires monotonic %-cor column, so we sort the matrix 1st.
+% Remember, it's just a guess.
+gpct    = 0.82;
+row_lo = max(find(Data(:,2)<=gpct));
+if isempty(row_lo)              % no percent correct > gpct
+    a_guess = min(Data(1,2));
+elseif row_lo == size(Data,1)   % no percent correct < gpct
+    a_guess = max(Data(end,2));
+else                            % interpolate
+    row_hi = row_lo + 1;
+    a_guess = Data(row_lo,1) + (Data(row_hi,1) - Data(row_lo,1)) * ...
+        (gpct - Data(row_lo,2)) / (Data(row_hi,2) - Data(row_lo,2));
+end
+
+%% do the fit
+if isempty(lambda) 
+    [fits_,f,e,o,l,g,H] = fmincon('quick_err', ...
+        [a_guess 1    1-max(Data(:,2))], [], [], [], [], ...
+        [0.001   0.01 0   ], ...
+        [1000    50   0.5 ], [], optimset('LargeScale', 'off', ...
+        'Display', 'off', 'Diagnostics', 'off'));
+end
+
+% standard errors
+% The covariance matrix is the negative of the inverse of the 
+% hessian of the natural logarithm of the probability of observing 
+% the data set given the optimal parameters.
+% For now, use the numerically-estimated HESSIAN returned by fmincon
+% (which remember is computed from -log likelihood)
+if nargout > 1
+    
+    % error_type is flag .. if not given (default), use Hessian
+    if nargin < 3 || isempty(error_flag)
+
+        % -H because we used -logL in quick_err
+        sems_=sqrt(diag(-((-H)^(-1))));
+        
+    else
+        % try getting monte-carlo simulated errors
+        num_sets = 50;
+        mcfits   = zeros(num_sets, length(fits_));
+        dat      = Data;
+        for i = 1:num_sets
+            Data(:,2)   = binornd(dat(:,3),dat(:,2))./dat(:,3);
+            mcfits(i,:) = quick3_fit(Data)';
+        end
+        
+        %   means = mean(mcfits)
+        sems_  = [fits_ - prctile(mcfits,16)' prctile(mcfits,84)' - fits_];
+    end
+end
+
+% return stats
+if nargout > 2
+    
+    % log likelihood of the fits ("M1" in Watson)
+    % is just the negative of the error function
+    M1 = -quick_err(fits_);
+    
+    % deviance is 2(M0 - M1), where
+    % M0 is the log likelihood of the data ("saturated model")
+    ys = data(:, 2);
+    % avoid log(0)
+    ys(ys==0) = 0.0001;
+    ys(ys==1) = 1 - 0.0001;
+    M0 = sum(data(:, 3).*(ys.*log(ys)+(1-ys).*log(1-ys)));
+    dev = 2*(M0-M1);
+    
+    % probability is from cdf
+    p = 1 - chi2cdf(dev, size(data, 1) - 3);
+    
+    stats_ = [
+end
+
+% return the predicted probability (of a correct response) for each observation
+if nargout > 3
+    pred_ = quick_val(Data(:,1), fits_(1), fits_(2), fits_(3));
+end

@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Things in {MDIR}</title>
+  <BASE href={HTMLBASE}>
+  <meta name="keywords" content="{MDIR}">
+  <meta name="description" content="stuff at {MDIR}">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="{HTMLBASE}/m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="{HTMLBASE}{INDEX}">FIRA</a> <!-- BEGIN pathline --> {FS} <a href="{LPATHDIR}">{PATHDIR}</a> <!-- END pathline -->  {FS}</div>
+
+<h1>{MDIR}</h1>
+
+<!-- BEGIN direxplain -->
+<div class="fragment"><pre class="comment">{DIR_EXPLAIN}</pre></div>
+<!-- END direxplain -->
+
+<h2>functions:</h2>
+<table>
+<!-- BEGIN row-m -->
+<tr> <td><img src="{HTMLBASE}matlabicon.gif" alt="" border=""></td> <td><a href="{L_NAME}">{NAME}</a></td> <td><div class="purpose">{H1LINE}</div> <!-- BEGIN mexfile --> <img src="{HTMLBASE}mex.png" alt="MEX" border="0"> <!-- END mexfile --> </td></tr>
+<!-- END row-m -->
+</table>
+
+<!-- BEGIN othermatlab -->
+<h2>scripts:</h2>
+<ul style="list-style-image:url({HTMLBASE}matlabicon.gif)">
+<!-- BEGIN row-other -->
+<li><bland>{OTHERFILE}</bland></li>
+<!-- END row-other -->
+</ul>
+<!-- END othermatlab -->
+
+<!-- BEGIN subfolder -->
+<h2>directories:</h2>
+<ul style="list-style-image:url({HTMLBASE}matlabicon.gif)">
+<!-- BEGIN subdir -->
+<li>{SUBDIRECTORY}</li>
+<!-- END subdir -->
+</ul>
+<!-- END subfolder -->
+
+<!-- BEGIN graph -->
+<h2>Dependency Graph</h2>
+<ul style="list-style-image:url({HTMLBASE}simulinkicon.gif)">
+<li>View the <a href="{LGRAPH}">Graph</a>.</li>
+</ul>
+<!-- END graph -->
+
+<!-- BEGIN todolist -->
+<h2>TODO List</h2>
+<ul style="list-style-image:url({HTMLBASE}demoicon.gif)">
+<li>View the <a href="{LTODOLIST}">TODO list</a>.</li>
+</ul>
+<!-- END todolist -->
+<hr><address>Generated on {DATE} by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

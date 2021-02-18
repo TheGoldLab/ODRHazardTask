@@ -1,0 +1,49 @@
+function addFIRA_tc(params, reps, randomize_flag)
+% function addFIRA_tc(params, reps, randomize_flag)
+%
+% set-up and allocated tuning curve data in FIRA.
+%   Can be n-dimensional -- makes every possible
+%   data-value combination
+%
+% Arguments:
+%   params ... nx2 cell array in which each row is:
+%                <compute_name>  <values>
+%   reps   ... number of complete repetitions
+%   randomize_flag ... duh
+
+% Copyright 2005 by Joshua I. Gold
+%   University of Pennsylvania
+
+% check args
+if nargin < 1
+    TCparams = [];
+end
+
+if nargin < 
+&& ~isempty(TCparams)
+
+    
+    % make N-D tuning curve
+    % this code kicks ass
+    grids      = cell(1, size(TCparams, 1));
+    [grids{:}] = ndgrid(TCparams{:,2});
+
+    % allocate space for the appropriate number of trials
+    num_trials = prod(size(grids{1})) * reps;
+    buildFIRA_alloc(num_trials);
+    
+    % randomize order
+    inds = randperm(num_trials);
+
+    % fill in FIRA
+    for i = 1:size(grids, 2)
+        vals = repmat(grids{i}(:), reps, 1);
+        FIRA.ecodes.data(:, getFIRA_ecodeColumnByName(TCparams{i,1})) = ...
+            vals(inds);
+    end
+
+elseif reps
+
+    % just allocate the given number of reps (trials)
+    buildFIRA_alloc(reps);
+end
