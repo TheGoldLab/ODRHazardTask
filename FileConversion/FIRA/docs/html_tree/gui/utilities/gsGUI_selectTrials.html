@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../>
+  <title>Description of gsGUI_selectTrials</title>
+  <meta name="keywords" content="gsGUI_selectTrials">
+  <meta name="description" content="function varargout = gsGUI_selectTrials(varargin)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">FIRA</a> / <a href="../index.html">gui</a>/ <a href="index.html">utilities</a> / gsGUI_selectTrials.m</div>
+
+<h1>gsGUI_selectTrials
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = gsGUI_selectTrials(varargin)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = gsGUI_selectTrials(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function varargout = gsGUI_selectTrials(varargin)
+
+ Sets up a modal dialog that is used to
+ make an &quot;Larray&quot; from FIRA data. Typically is
+ given the list of &quot;id&quot; column names from
+ FIRA.ecodes and sets up a series of rows 
+ of radiobuttons, each row corresponding to 
+ all possible values of the given id.
+
+ WARNING
+ -------
+ BE SURE TO SET THE OUTPUT OF INITF TO HANDLES.SELECT
+
+ Usage:
+
+ sel_ = gsGUI_selectTrials('initf', select_button_h, creator)
+        ... initializes the sel_ struct and sets up the
+               appropriate callbacks
+
+ gsGUI_selectTrials('setf', plot_h, handles)
+        ... invokes the GUI to make the cell array of new values
+               (array for each id) used to generate the Larray
+               this is set up automatically by initf
+
+ trials = gsGUI_selectTrials('getf', newS, curslider_handle, histslider_handle)
+        ... generates the list of selected trials from FIRA based on the
+               gui
+
+ Callbacks:
+  gsGUI_Larray('rb_cb',     h, ind, hdata)
+  gsGUI_Larray('ok_cb',     hdata)
+  gsGUI_Larray('cancel_cb', hdata)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../html_tree/build/dataTypes/@analog/get.html" class="code" title="function val_ = get(a, property)">get (analog)</a>	function val_ = get(a, property)</li><li><a href="../../../html_tree/build/dataTypes/@awdData/get.html" class="code" title="function val_ = get(a, property)">get (awdData)</a>	function val_ = get(a, property)</li><li><a href="../../../html_tree/build/dataTypes/@dio/get.html" class="code" title="function val_ = get(d, property)">get (dio)</a>	function val_ = get(d, property)</li><li><a href="../../../html_tree/build/dataTypes/@ecodes/get.html" class="code" title="function val_ = get(e, property)">get (ecodes)</a>	function val_ = get(e, property)</li><li><a href="../../../html_tree/build/dataTypes/@kbdData/get.html" class="code" title="function val_ = get(k, property)">get (kbdData)</a>	function val_ = get(k, property)</li><li><a href="../../../html_tree/build/dataTypes/@lpHIDData/get.html" class="code" title="function val_ = get(lp, property)">get (lpHIDData)</a>	function val_ = get(lp, property)</li><li><a href="../../../html_tree/build/dataTypes/@matCmds/get.html" class="code" title="function val_ = get(a, property)">get (matCmds)</a>	function val_ = get(a, property)</li><li><a href="../../../html_tree/build/dataTypes/@spikes/get.html" class="code" title="function val_ = get(s, property)">get (spikes)</a>	function val_ = get(s, property)</li><li><a href="../../../html_tree/build/dataTypes/@trial/get.html" class="code" title="function val_ = get(t, property)">get (trial)</a>	function val_ = get(t, property)</li><li><a href="../../../html_tree/utilities/getFIRA_ecodeColumnByName.html" class="code" title="function column_ = getFIRA_ecodeColumnByName(name, type)">getFIRA_ecodeColumnByName</a>	function column_ = getFIRA_ecodeColumnByName(name, type)</li><li><a href="../../../html_tree/utilities/getFIRA_ecodeNames.html" class="code" title="function names_ = getFIRA_ecodeNames(type)">getFIRA_ecodeNames</a>	function names_ = getFIRA_ecodeNames(type)</li><li><a href="../../../html_tree/utilities/getFIRA_uniqueEcodeValues.html" class="code" title="function ids_ = getFIRA_uniqueEcodeIDs(names)">getFIRA_uniqueEcodeValues</a>	function ids_ = getFIRA_uniqueEcodeIDs(names)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="../../../html_tree/gui/plotMenu/plotGUI_deviations.html" class="code" title="function varargout = plotGUI_psychometric(varargin)">plotGUI_deviations</a>	plotGUI_neurometricROC Application M-file for plotGUI_psychometric.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_eyePosition.html" class="code" title="function varargout = plotGUI_eyePosition(varargin)">plotGUI_eyePosition</a>	plotGUI_eyePosition Application M-file for plotFIRA_eyes.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_neurometricROC.html" class="code" title="function varargout = plotGUI_neurometricROC(varargin)">plotGUI_neurometricROC</a>	plotGUI_neurometricROC Application M-file for plotGUI_neurometricROC.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_neurometricROCT.html" class="code" title="function varargout = plotGUI_neurometricROCT(varargin)">plotGUI_neurometricROCT</a>	plotGUI_neurometricROC Application M-file for plotGUI_neurometricROCT.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_polarTC.html" class="code" title="function varargout = plotGUI_polarTC(varargin)">plotGUI_polarTC</a>	plotGUI_rasterTC Application M-file for plotGUI_polarTC.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_psychometric.html" class="code" title="function varargout = plotGUI_psychometric(varargin)">plotGUI_psychometric</a>	plotGUI_neurometricROC Application M-file for plotGUI_psychometric.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_quickT.html" class="code" title="function varargout = plotGUI_quickT(varargin)">plotGUI_quickT</a>	plotGUI_quickT Application M-file for plotGUI_quickT.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_raster.html" class="code" title="function varargout = plotGUI_raster(varargin)">plotGUI_raster</a>	plotGUI_rasterTC Application M-file for plotGUI_raster.fig</li><li><a href="../../../html_tree/gui/plotMenu/plotGUI_scatter.html" class="code" title="function varargout = plotGUI_scatter(varargin)">plotGUI_scatter</a>	plotGUI_scatter Application M-file for plotGUI_scatter.fig</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

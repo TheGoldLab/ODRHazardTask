@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../>
+  <title>Description of plotFIRA_eyePosition</title>
+  <meta name="keywords" content="plotFIRA_eyePosition">
+  <meta name="description" content="function plotFIRA_eyePosition(trials, begin_times, end_times, wrt_times, ...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">FIRA</a> / <a href="index.html">utilities</a> / plotFIRA_eyePosition.m</div>
+
+<h1>plotFIRA_eyePosition
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function plotFIRA_eyePosition(trials, begin_times, end_times, wrt_times, ...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function plotFIRA_eyePosition(trials, begin_times, end_times, wrt_times,epoch, sbc_selectors, marker_times, gain, ax1, ax2, ax3) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">function plotFIRA_eyePosition(trials, begin_times, end_times, wrt_times, ...
+    epoch, sbc_selectors, marker_times, gain, ax1, ax2, ax3)
+
+ Plots eye position data in X vs T, Y vs T, and X vs Y format
+
+ Arguments:
+   trials          ... array of trials to use
+   begin_times     ... array of epoch start times (re: trial wrt)
+   end_times       ... array of epoch end times (re: trial wrt)
+   wrt_times       ... array of epoch wrt times (re: trial wrt)
+   epoch           ... min, max epoch length
+   sbc_selectors   ... selection matrix, rows are trials, cols are colors
+   marker_times    ... matrix of times of markers (re: trial wrt), cols
+                           are different markers
+   gain            ... additional gain for the X, Y channels
+   ax1             ... axis to plot X vs T. [] if not shown.
+   ax2             ... axis to plot Y vs T. [] if not shown.
+   ax3             ... axis to plot X vs Y. [] if not shown.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/gui/plotMenu/plotGUI_eyePosition.html" class="code" title="function varargout = plotGUI_eyePosition(varargin)">plotGUI_eyePosition</a>	plotGUI_eyePosition Application M-file for plotFIRA_eyes.fig</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -4,7 +4,7 @@ files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 4;
+currentFile = 3;
 
 theFile= files(currentFile).name;
 temp=load(theFile);

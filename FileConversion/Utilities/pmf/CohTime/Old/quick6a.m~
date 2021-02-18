@@ -1,0 +1,44 @@
+function vals_ = quick6a(fits, data)
+% function vals_ = quick6a(fits, data)
+%
+% Computes TIME-based Quick (cumulative Weibull)
+%   function:
+%   
+%   (0.5 + bias) + (1 - (0.5 + bias) - lambda) * 
+%       (1 - exp(-(COH/alpha_t).^beta))
+%
+%  Where
+%   alpha_t = Asymptote./exp((TIME-T_offset)./Tau)
+%
+%  At values in "data":
+%       data(1)   ... COH (%)
+%       data(2)   ... TIME (sec)
+%       data(3)   ... dot dir (-1/1)
+%
+%   given parameters in "fits":
+%       fits(1) ... Asymptote (lower, y)
+%       fits(2) ... T_offset
+%       fits(3) ... Tau
+%       fits(4) ... Beta   (slope)
+%       fits(5) ... bias   (signed offset)
+%       fits(6) ... lambda ("lapse")
+
+% return initial values (init, min, max)
+if nargin < 1
+    
+    vals_ = [ ...
+        12     1        100;   ...
+        .2    0.05     0.2; ...
+        0.6   0.01    10;   ...        
+        1.2   0       12;   ...
+        0  -0.45       0.45;...
+        0     0        0.45];
+
+else
+
+    alpha_t = fits(1) + 50./exp((data(:,2)-fits(2))./fits(3));
+    vals_   = (.5 + fits(5).*data(3)) + ...
+        (1 - (.5 + fits(5).*data(3)) - fits(6)).* ...
+        (1-exp(-(data(:,1)./alpha_t).^fits(4)));
+
+end

@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../>
+  <title>Description of plotFIRA_neurometricROC</title>
+  <meta name="keywords" content="plotFIRA_neurometricROC">
+  <meta name="description" content="function [fits_, stats_] = plotFIRA_neurometricROC( ...">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">FIRA</a> / <a href="index.html">utilities</a> / plotFIRA_neurometricROC.m</div>
+
+<h1>plotFIRA_neurometricROC
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [fits_, stats_] = plotFIRA_neurometricROC( ...</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function [fits_, stats_] = plotFIRA_neurometricROC(trials, Lsd, Lsc, cohs, spikei, begin_times, end_times,lambda, mainaxis, cohhs) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">function [fits_, stats_] = plotFIRA_neurometricROC( ...
+    trials, Lsd, Lsc, cohs, spikei, begin_times, end_times, ...
+    mainaxis, cohaxes, cohhs)
+
+   Arguments:
+
+       trials      ... list of trials in FIRA
+       Lsd         ... mx2 selection array, cols are directions
+       Lsc         ... mxn selection array, cols are cohs
+       cohs        ... coh values corresponding to cols of Lsc
+       spikei      ... spike index (scalar)
+       begin_times ... begin time of trial epoch 
+       end_times   ... end time of trial epoch
+       lambda      ... optional value of lambda (lapse) to send to fit
+       mainaxis    ... axis to plot % correct and fits
+       cohhs       ... handles to plot objects
+
+   Returns:
+       fits_       ... best fit &amp; sem of alpha, beta, lambda
+       stats_      ... LLR, p</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/build/dataTypes/@analog/get.html" class="code" title="function val_ = get(a, property)">get (analog)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@awdData/get.html" class="code" title="function val_ = get(a, property)">get (awdData)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@dio/get.html" class="code" title="function val_ = get(d, property)">get (dio)</a>	function val_ = get(d, property)</li><li><a href="../../html_tree/build/dataTypes/@ecodes/get.html" class="code" title="function val_ = get(e, property)">get (ecodes)</a>	function val_ = get(e, property)</li><li><a href="../../html_tree/build/dataTypes/@kbdData/get.html" class="code" title="function val_ = get(k, property)">get (kbdData)</a>	function val_ = get(k, property)</li><li><a href="../../html_tree/build/dataTypes/@lpHIDData/get.html" class="code" title="function val_ = get(lp, property)">get (lpHIDData)</a>	function val_ = get(lp, property)</li><li><a href="../../html_tree/build/dataTypes/@matCmds/get.html" class="code" title="function val_ = get(a, property)">get (matCmds)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@spikes/get.html" class="code" title="function val_ = get(s, property)">get (spikes)</a>	function val_ = get(s, property)</li><li><a href="../../html_tree/build/dataTypes/@trial/get.html" class="code" title="function val_ = get(t, property)">get (trial)</a>	function val_ = get(t, property)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/gui/plotMenu/plotGUI_neurometricROC.html" class="code" title="function varargout = plotGUI_neurometricROC(varargin)">plotGUI_neurometricROC</a>	plotGUI_neurometricROC Application M-file for plotGUI_neurometricROC.fig</li><li><a href="plotFIRA_neurometricROCT.html" class="code" title="function fits_ = plotFIRA_neurometricROCT(trials, Lsd, Lsc,cohs, spikei, begin_times, end_times, bin_start, bin_end,do_fits, ax1, ax2)">plotFIRA_neurometricROCT</a>	function fits_ = plotFIRA_neurometricROCT(trials, Lsd, Lsc, ...</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,177 @@
+function addTrial(an, start_times, data, names, store_rates)
+% function addTrial(an, start_times, data, names, store_rates)
+%
+% addTrial method for class analog. Adds data to the
+%   most recent trial.
+%
+% Input:
+%   an          ... the analog object
+%   start_times ... scalar or array of start times
+%   data        ... cell array of data arrays
+%   names       ... cell array of string names of channels
+%   store_rates ... cell array of store rates, one per channel
+%
+% Output:
+%   nada, but fills FIRA.analog.data(trial,:) with given data
+
+% Copyright 2005 by Joshua I. Gold
+%   University of Pennsylvania
+
+global FIRA
+
+if nargin < 3
+    return
+end
+
+if nargin < 4 
+    
+    % start with indices of all given data columns
+    num_given = size(data, 2);
+    num_exist = size(FIRA.analog.name, 2);
+    loc       = 1:num_given;
+    
+    if num_given > num_exist
+        
+        % if more channels given than exist, name new channels "ch#"
+        loc(num_exist+1:end) = 0;
+        new_names            = cell(1, num_given - num_exist);
+        for nn = 1:size(new_names, 2)
+            new_names(nn) = sprintf('ch%d', num_exist+nn);
+        end        
+    end
+    
+else
+    
+    % check given names with existing names
+    [tf, loc] = ismember(names, FIRA.analog.name);
+    new_names = names(~tf);
+end
+
+if any(loc == 0)
+    
+    % check new names
+    Lchk    = check(an, new_names);
+    num_new = sum(Lchk);
+    
+    if num_new
+        
+        % setup FIRA.analog with new columns
+        new_cols = size(FIRA.analog.name,2)+1:size(FIRA.analog.name,2)+num_new;
+        FIRA.analog.name(new_cols) = new_names(Lchk);
+        if nargin > 4
+            if size(store_rates, 2) == size(data, 2)
+                inds = find(loc == 0);
+                store_rates = store_rates(inds(Lchk));
+            end
+            FIRA.analog.store_rate(new_cols) = store_rates;
+        end
+        
+        % no channels exist, must add them plus new trials
+        if size(FIRA.analog.data, 1) == 0
+            
+
+            % add trials to end (rows) of FIRA.analog.data
+            alloc(an, FIRA.header.numTrials - size(FIRA.analog.data, 1));
+
+        else
+
+            % channels exist, must add them first, then new trials
+            FIRA.analog.name = cat(2, FIRA.analog.name, new_channels);
+
+            % add store rates
+            Lnc = find(ismember(names, new_channels));
+            if nargin > 4 && size(store_rates, 2) <= max(Lnc)
+                FIRA.analog.store_rates(end+1:end+size(Lnc, 2)) = store_rates(Lnc);
+        end
+        
+        % add trials to new columns of FIRA.analog.data
+        num_trials = size(FIRA.analog.data, 1);
+        num_sigs   = size(Lnc, 2);
+        FIRA.analog.data = cat(2, FIRA.analog.data, ...
+            struct( ...
+            'start_time', nancells(num_trials, num_sigs), ...
+            'length',     0, ...
+            'values',     []));
+    end
+end
+
+
+% add data
+    
+    
+    
+    
+    
+    
+    % check channel names versus existing names
+    [new_channels, Lnew] = setdiff(names, FIRA.analog.name);
+
+    % re-sort so they're in the original order
+    if ~isempty(new_channels)
+        new_channels = names(sort(Lnc));
+    end
+
+end
+
+        new = check(an, names
+
+
+    end
+end
+
+% check inds
+Lc = Lc(check(an, FIRA.analog.name(Lc)));
+
+% save data
+[FIRA.analog.data(end, Lc).start_time] = deal(start_times);
+[FIRA.analog.data(end, Lc).data]       = deal(data{:});
+for ii = 1:size(Lc, 2);
+    FIRA.analog.data(end, Lc(ii)).length = size(data{ii}, 1);
+end
+
+
+elsei
+    
+    
+    names = FIRA.analog.na
+
+    % if more channels given than exist, first 
+    % name new channels based on any existing names
+    new   = size(FIRA.analog.name,2)+1:size(data, 2);    
+    names = cat(2, FIRA.analog.name, cell(size(new)));
+
+    % loop through the rest, giving default names
+    for nn = new        
+        names(nn) = sprintf('ch%d', nn);
+    end
+
+    
+    
+    if size(data
+    
+% check that the appropriate channels exist .. if not we need
+% to set them up
+if nargin > 3
+    
+    % check channel names versus existing names
+    [new_channels, Lnc] = setdiff(names, FIRA.analog.name);
+    
+    % re-sort so they're in the original order
+    if ~isempty(new_channels)
+        new_channels = names(sort(Lnc));
+    end
+    
+elseif size(data, 2) > size(FIRA.analog.name, 2)
+    
+
+    % collect new channel names
+    new_channels = names(new);
+
+else
+    names        = FIRA.analog.name;
+    new_channels = {};
+end
+
+% setup new channels
+if ~isempty(new_channels)
+ 

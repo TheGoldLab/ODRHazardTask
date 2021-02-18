@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../../>
+  <title>Description of parseREX_aData</title>
+  <meta name="keywords" content="parseREX_aData">
+  <meta name="description" content="function parseREX_aData">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">FIRA</a> / <a href="../../index.html">build</a>/ <a href="">readers</a>/ <a href="index.html">Rex</a> / parseREX_aData.m</div>
+
+<h1>parseREX_aData
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function parseREX_aData</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function parseREX_aData </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function parseREX_aData
+
+ uses FIRA.raw.adata
+      FIRA.raw.aparams
+      FIRA.trial.index
+      FIRA.trial.start
+      FIRA.trial.wrt
+      FIRA.trial.end
+      FIRA.trial.ecodes
+ to find the appropriate analog data for the given trial
+
+ fills in the array of structures in FIRA.analog.data associated
+   with the current trial (FIRA.tria.index). These structures
+   have already been created with the following fields:
+       start_time
+       values
+
+ adapted by jig 10/2/00 from ComposeAnalog4trial &amp; ComposeRaster4trial
+
+ from ComposeAnalog4trial:
+  newtrial_ = ComposeAnalog4trial(e0, header, Avect)
+  Given an efile snippet for the trial, the afile vector, the current
+  version of the trial cell array and the experiment's data header struct, this
+  routine returns an improved version of the trial array, with atim, the total
+  number of stored data points in all the records, and the signal data
+  itself, divided into channels as filtered through the store_order array. 
+
+  The older version of this routine called two subsidiary routines,
+  getAstrip and getAcont, whose functionality have been incorporated into
+  this routine.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="readREX_files.html" class="code" title="function error_ = readREX_files(filename)">readREX_files</a>	function error_ = readREX_files(filename)</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

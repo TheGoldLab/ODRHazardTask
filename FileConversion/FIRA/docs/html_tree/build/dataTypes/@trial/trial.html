@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../../>
+  <title>Description of trial (trial)</title>
+  <meta name="keywords" content="trial (trial)">
+  <meta name="description" content="function tr_ = trial(varargin)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">FIRA</a> / <a href="../../index.html">build</a>/ <a href="">dataTypes</a>/ <a href="index.html">@trial</a> / trial (trial).m</div>
+
+<h1>trial (trial)
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function tr_ = trial(varargin)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function tr_ = trial(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function tr_ = trial(varargin)
+
+ Constructor method for class trial. Creates:
+   FIRA.spm.trial = trial_object
+   FIRA.raw.trial = trial_struct, described below
+
+ Reads FIRA.spm.trial, which stores a cell array 
+   of &lt;property&gt;, &lt;value&gt; pairs
+
+ this routine also makes sure that FIRA.spm.trial is listed
+   first, so that it is always called first
+
+ Input:
+   varargin ... optional property value pairs
+                also looks in FIRA.spm.trial for
+                optional list of property/value pairs
+
+ Output:
+   tr_ ... the trial object, to be stored in FIRA.spm.trial
+   Also creates FIRA.raw.trial</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/readers/Ecodes/declareEC_ecodes.html" class="code" title="">declareEC_ecodes</a>	script declareEC_ecodes</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/dataTypes/@dio/addTrial.html" class="code" title="function addTrial(dio, data)">addTrial (dio)</a>	function addTrial(dio, data)</li><li><a href="../../../../html_tree/utilities/getFIRA_ec.html" class="code" title="function ecs_ = getFIRA_ec(trial, names)">getFIRA_ec</a>	function ecs_ = getFIRA_ec(trial, names)</li><li><a href="../../../../html_tree/utilities/getFIRA_saccades.html" class="code" title="function [sacs_, bf_] = getFIRA_saccades(trial, num_saccades, recal,heye, veye, fpoff, fpx, fpy, max_time)">getFIRA_saccades</a>	function [sacs_, bf_] = getFIRA_saccades(trial, num_saccades, recal, ...</li><li><a href="../../../../html_tree/utilities/setFIRA_ec.html" class="code" title="function setFIRA_ec(trial, names, values)">setFIRA_ec</a>	function setFIRA_ec(trial, names, values)</li><li><a href="../../../../html_tree/utilities/showFIRA_saccades.html" class="code" title="function showFIRA_saccades(trial, fig)">showFIRA_saccades</a>	function showFIRA_saccades(trial, fig)</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

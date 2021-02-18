@@ -1,0 +1,1 @@
+function [tax_, haz_] = hazard(pdf, bin_size)% function [tax_, haz_] = hazard(pdf, bin_size)%if nargin < 2  bin_size = max(pdf)+1-min(pdf)/20;endtax_  = min(pdf)-bin_size:bin_size:max(pdf)+bin_size;tbins = histc(pdf, tax_);tbins = tbins/sum(tbins);den   = 1 - cumsum(tbins);den(den==0) = 0.00001;haz_  = tbins./den;

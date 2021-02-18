@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../../>
+  <title>Description of parseEC_rawCodes</title>
+  <meta name="keywords" content="parseEC_rawCodes">
+  <meta name="description" content="function parseEC_rawCodes(codes)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">FIRA</a> / <a href="../../index.html">build</a>/ <a href="">readers</a>/ <a href="index.html">Ecodes</a> / parseEC_rawCodes.m</div>
+
+<h1>parseEC_rawCodes
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function parseEC_rawCodes(codes)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function parseEC_rawCodes(codes) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function parseEC_rawCodes(codes)
+
+ Reads the given ecodes matrix in which
+   each row is &lt;timestamp&gt; &lt;ecode&gt;
+ and figures out which codes are acual ecodes and 
+ which are spikes, dio commands, matlab commands, and
+ matlab arguments
+   
+ Fills in (when appropriate, depending on the existance
+   of each data type in FIRA.raw) the following:
+   FIRA.raw.ecodes  ... nx2 matrix of &quot;general&quot; ecodes -- that is, the ecodes
+                         normally dropped in the REX e-file
+                         columns are &lt;timestamp&gt; &lt;value&gt;
+   FIRA.raw.spikes  ... in rex, sent as codes 601:608
+   FIRA.raw.matCmds ... struct with fields &quot;cmds&quot;, &quot;args&quot;, and &quot;index&quot;
+                        cmds is nx3 matrix of &quot;MATLAB command&quot; ecodes, which
+                         are commands sent to ShadlenDots
+                         columns are: &lt;timestamp&gt; &lt;cmd_index&gt; &lt;total_#_args&gt;
+                        args is nx1 array of Cells (thus the &quot;C&quot;)...
+                         each Cell is an mx2 matrix of arguments
+                         columns are &lt;arg #&gt; &lt;arg value&gt;
+                         Note that arguments are typically sent low priority,
+                         which means that, in principle, they can be delayed 
+                         relative to other messages... which is why we have to be
+                         careful to keep filling them in as they come
+                        index keeps track of matlab arguments
+   FIRA.raw.dios   ... nx3 matrix of &quot;dio&quot; ecodes, which correspond to 
+                        commands send via the dio interface to rack-mounted
+                        modules (e.g., reward system)
+                        columns are &lt;timestamp&gt; &lt;port&gt; &lt;data&gt;</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/dataTypes/@analog/verify.html" class="code" title="function ret_ = verify(a, channels)">verify (analog)</a>	function ret_ = verify(a, channels)</li><li><a href="../../../../html_tree/build/dataTypes/@spikes/verify.html" class="code" title="function [Lgood_, id_] = verify(s, id)">verify (spikes)</a>	function [Lgood_, id_] = verify(s, id)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/readers/Plexon/connectPLX_loop.html" class="code" title="function connectPLX_loop">connectPLX_loop</a>	function connectPLX_loop</li><li><a href="../../../../html_tree/build/readers/Plexon/readPLX_nexFile.html" class="code" title="function error_ = readPLX_nexFile(filename)">readPLX_nexFile</a>	function error_ = readPLX_nexFile(filename)</li><li><a href="../../../../html_tree/build/readers/Rex/readREX_files.html" class="code" title="function error_ = readREX_files(filename)">readREX_files</a>	function error_ = readREX_files(filename)</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

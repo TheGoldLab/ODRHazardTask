@@ -1,0 +1,7 @@
+function mat_ = grid2mat(grid, ns, xvals, yvals)
+% function mat_ = grid2mat(grid, ns, xvals, yvals)
+%
+
+mat_ = zeros(sum(~isnan(grid(:))), 3);
+
+for ii = 1

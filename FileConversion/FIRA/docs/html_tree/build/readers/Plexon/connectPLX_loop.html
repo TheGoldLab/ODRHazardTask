@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../../>
+  <title>Description of connectPLX_loop</title>
+  <meta name="keywords" content="connectPLX_loop">
+  <meta name="description" content="function connectPLX_loop">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">FIRA</a> / <a href="../../index.html">build</a>/ <a href="">readers</a>/ <a href="index.html">Plexon</a> / connectPLX_loop.m</div>
+
+<h1>connectPLX_loop
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function connectPLX_loop</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function connectPLX_loop </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function connectPLX_loop
+
+ adds data from the Plexon connection to FIRA.raw
+ Note: still must call buildFIRA_parse to add the raw data
+ to FIRA.(dataTypes)
+
+ Arguments:
+   force_flag  ... if 1, force a verify of new spike channel/units</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/buildFIRA_get.html" class="code" title="function val_ = buildFIRA_get(dataType, property)">buildFIRA_get</a>	function buildFIRA_get(dataType, property)</li><li><a href="../../../../html_tree/build/dataTypes/@analog/verify.html" class="code" title="function ret_ = verify(a, channels)">verify (analog)</a>	function ret_ = verify(a, channels)</li><li><a href="../../../../html_tree/build/dataTypes/@spikes/verify.html" class="code" title="function [Lgood_, id_] = verify(s, id)">verify (spikes)</a>	function [Lgood_, id_] = verify(s, id)</li><li><a href="../../../../html_tree/build/readers/Ecodes/parseEC_rawCodes.html" class="code" title="function parseEC_rawCodes(codes)">parseEC_rawCodes</a>	function parseEC_rawCodes(codes)</li><li><a href="getPLX_analogNames.html" class="code" title="function anames_ = getPLX_analogNames(channels)">getPLX_analogNames</a>	function anames_ = getPLX_analogNames(channels)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/buildScripts/bConnect_loop.html" class="code" title="function bConnect_loop">bConnect_loop</a>	function bConnect_loop</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

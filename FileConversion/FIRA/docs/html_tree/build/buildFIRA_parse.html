@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../>
+  <title>Description of buildFIRA_parse</title>
+  <meta name="keywords" content="buildFIRA_parse">
+  <meta name="description" content="function buildFIRA_parse(num_trials)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">FIRA</a> / <a href="index.html">build</a> / buildFIRA_parse.m</div>
+
+<h1>buildFIRA_parse
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_parse(num_trials)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_parse(num_trials) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function buildFIRA_parse(num_trials)
+
+ Converts raw data in FIRA.raw into ecodes, etc.
+ Note that this is the one buildFIRA_* routine that 
+   requires a special case -- the existance of a dataType
+   class called 'trial', which is called first to
+   get trial ecodes from the raw data
+
+ Arguments:
+   num_trials ... optional argument for number of trials
+
+ Returns:
+   nada</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/build/dataTypes/@analog/get.html" class="code" title="function val_ = get(a, property)">get (analog)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@analog/parse.html" class="code" title="function parse(a)">parse (analog)</a>	function parse(a)</li><li><a href="../../html_tree/build/dataTypes/@awdData/get.html" class="code" title="function val_ = get(a, property)">get (awdData)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@awdData/parse.html" class="code" title="function parse(a)">parse (awdData)</a>	function parse(a)</li><li><a href="../../html_tree/build/dataTypes/@dio/get.html" class="code" title="function val_ = get(d, property)">get (dio)</a>	function val_ = get(d, property)</li><li><a href="../../html_tree/build/dataTypes/@dio/parse.html" class="code" title="function parse(d)">parse (dio)</a>	function continue_ = parse(d)</li><li><a href="../../html_tree/build/dataTypes/@ecodes/get.html" class="code" title="function val_ = get(e, property)">get (ecodes)</a>	function val_ = get(e, property)</li><li><a href="../../html_tree/build/dataTypes/@ecodes/parse.html" class="code" title="function parse(e)">parse (ecodes)</a>	function parse(e)</li><li><a href="../../html_tree/build/dataTypes/@kbdData/get.html" class="code" title="function val_ = get(k, property)">get (kbdData)</a>	function val_ = get(k, property)</li><li><a href="../../html_tree/build/dataTypes/@kbdData/parse.html" class="code" title="function parse(k)">parse (kbdData)</a>	function parse(k)</li><li><a href="../../html_tree/build/dataTypes/@lpHIDData/get.html" class="code" title="function val_ = get(lp, property)">get (lpHIDData)</a>	function val_ = get(lp, property)</li><li><a href="../../html_tree/build/dataTypes/@lpHIDData/parse.html" class="code" title="function parse(lp)">parse (lpHIDData)</a>	function parse(lp)</li><li><a href="../../html_tree/build/dataTypes/@matCmds/get.html" class="code" title="function val_ = get(a, property)">get (matCmds)</a>	function val_ = get(a, property)</li><li><a href="../../html_tree/build/dataTypes/@matCmds/parse.html" class="code" title="function parse(m)">parse (matCmds)</a>	function parse(m)</li><li><a href="../../html_tree/build/dataTypes/@spikes/get.html" class="code" title="function val_ = get(s, property)">get (spikes)</a>	function val_ = get(s, property)</li><li><a href="../../html_tree/build/dataTypes/@spikes/parse.html" class="code" title="function parse(s)">parse (spikes)</a>	function parse(s)</li><li><a href="../../html_tree/build/dataTypes/@trial/get.html" class="code" title="function val_ = get(t, property)">get (trial)</a>	function val_ = get(t, property)</li><li><a href="../../html_tree/build/dataTypes/@trial/parse.html" class="code" title="function continue_ = parse(t)">parse (trial)</a>	function continue_ = parse(t)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/build/buildScripts/bConnect_loop.html" class="code" title="function bConnect_loop">bConnect_loop</a>	function bConnect_loop</li><li><a href="../../html_tree/build/buildScripts/bFile.html" class="code" title="function bFile(file_in, file_type, spm, file_out, spike_list,sig_list, keep_matCmds, keep_dio, flags, messageH)">bFile</a>	function bFile(file_in, file_type, spm, file_out, spike_list, ...</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

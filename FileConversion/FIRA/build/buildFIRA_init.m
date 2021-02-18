@@ -160,48 +160,48 @@ if nargin < 2 || isempty(include_list)
     include_list = fieldnames(FIRA.spm)';
 end
 
-% while(~isempty(include_list))
-% 
-%     % proceed only if not in exclude list and not already made
-%     if ischar(include_list{1}) && ~any(strcmp(include_list{1}, exclude_list)) && ...
-%             ~(isfield(FIRA.spm, include_list{1}) && ...
-%             isa(FIRA.spm.(include_list{1}), include_list{1}))
-% 
-%         %%%
-%         % ADD FIELDS BASED ON FIRA.SPM
-%         %%%
-%         % evaluate each field of FIRA.spm, which is the name of a dataType
-%         %   class that, when called, typically will create:
-%         %   FIRA.spm.(name) = the_object
-%         %   FIRA.raw.(name) = raw data, typically filled by buildFIRA_read
-%         %   FIRA.(name)     = class-specific data struct, typically created by
-%         %                       buildFIRA_alloc and filled by buildFIRA_parse
-%         name = include_list{1};
-%         
-%         if size(include_list, 2) > 1 && iscell(include_list{2})
-% 
-%             % eval the named dataType .. stored in FIRA.spm.(*)
-%             sp = feval(include_list{1}, include_list{2}{:});
-%             include_list(1:2) = [];
-%         else
-%             sp = feval(include_list{1});
-%             include_list(1) = [];
-%         end
-% 
-%         % save it
-%         if isempty(sp)
-%             if isfield(FIRA.spm, name)
-%                 FIRA.spm = rmfield(FIRA.spm, name);
-%             end
-%         else
-%             FIRA.spm.(name) = sp;
-%         end
-%             
-%     else
-%         % update include list
-%         include_list(1) = [];        
-%     end
-% end
+while(~isempty(include_list))
+
+    % proceed only if not in exclude list and not already made
+    if ischar(include_list{1}) && ~any(strcmp(include_list{1}, exclude_list)) && ...
+            ~(isfield(FIRA.spm, include_list{1}) && ...
+            isa(FIRA.spm.(include_list{1}), include_list{1}))
+
+        %%%
+        % ADD FIELDS BASED ON FIRA.SPM
+        %%%
+        % evaluate each field of FIRA.spm, which is the name of a dataType
+        %   class that, when called, typically will create:
+        %   FIRA.spm.(name) = the_object
+        %   FIRA.raw.(name) = raw data, typically filled by buildFIRA_read
+        %   FIRA.(name)     = class-specific data struct, typically created by
+        %                       buildFIRA_alloc and filled by buildFIRA_parse
+        name = include_list{1};
+        
+        if size(include_list, 2) > 1 && iscell(include_list{2})
+
+            % eval the named dataType .. stored in FIRA.spm.(*)
+            sp = feval(include_list{1}, include_list{2}{:});
+            include_list(1:2) = [];
+        else
+            sp = feval(include_list{1});
+            include_list(1) = [];
+        end
+
+        % save it
+        if isempty(sp)
+            if isfield(FIRA.spm, name)
+                FIRA.spm = rmfield(FIRA.spm, name);
+            end
+        else
+            FIRA.spm.(name) = sp;
+        end
+            
+    else
+        % update include list
+        include_list(1) = [];        
+    end
+end
 
 % remove unused fields from FIRA.spm
 for fn = fieldnames(FIRA.spm)'

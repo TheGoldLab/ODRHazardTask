@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../>
+  <title>Description of buildFIRA_alloc</title>
+  <meta name="keywords" content="buildFIRA_alloc">
+  <meta name="description" content="function buildFIRA_alloc(num_trials)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">FIRA</a> / <a href="index.html">build</a> / buildFIRA_alloc.m</div>
+
+<h1>buildFIRA_alloc
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_alloc(num_trials)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_alloc(num_trials) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function buildFIRA_alloc(num_trials)
+
+ Calls dataType-specific alloc methods to allocate
+   space in each FIRA.(dataType) for trial data
+
+ Arguments:
+   num_trials ... optional argument specifying number of trials
+               to allocate. If not given or empty, alloc methods
+               typically use FIRA.raw.numTrials
+
+ Returns:
+   nada</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="../../html_tree/build/dataTypes/@analog/alloc.html" class="code" title="function alloc(an, num_trials)">alloc (analog)</a>	function alloc(an, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@awdData/alloc.html" class="code" title="function alloc(a, num_trials)">alloc (awdData)</a>	function alloc(a, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@dio/alloc.html" class="code" title="function alloc(d_, num_trials)">alloc (dio)</a>	function alloc(d_, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@ecodes/alloc.html" class="code" title="function alloc(e_, num_trials)">alloc (ecodes)</a>	function alloc(e_, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@kbdData/alloc.html" class="code" title="function alloc(k, num_trials)">alloc (kbdData)</a>	function alloc(k, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@lpHIDData/alloc.html" class="code" title="function alloc(lp, num_trials)">alloc (lpHIDData)</a>	function alloc(lp, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@matCmds/alloc.html" class="code" title="function alloc(m_, num_trials)">alloc (matCmds)</a>	function alloc(m_, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@spikes/alloc.html" class="code" title="function alloc(s_, num_trials)">alloc (spikes)</a>	function alloc(s_, num_trials)</li><li><a href="../../html_tree/build/dataTypes/@trial/alloc.html" class="code" title="function alloc(t, trials)">alloc (trial)</a>	function alloc(t, trials)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="buildFIRA_addTrial.html" class="code" title="function buildFIRA_addTrial(varargin)">buildFIRA_addTrial</a>	function buildFIRA_addTrial(varargin)</li><li><a href="../../html_tree/build/buildScripts/bConnect_loop.html" class="code" title="function bConnect_loop">bConnect_loop</a>	function bConnect_loop</li><li><a href="../../html_tree/build/buildScripts/bDefault.html" class="code" title="function bDefault(trials, varargin)">bDefault</a>	function bDefault(trials, varargin)</li><li><a href="../../html_tree/build/buildScripts/bFile.html" class="code" title="function bFile(file_in, file_type, spm, file_out, spike_list,sig_list, keep_matCmds, keep_dio, flags, messageH)">bFile</a>	function bFile(file_in, file_type, spm, file_out, spike_list, ...</li><li><a href="../../html_tree/utilities/addFIRA_tc.html" class="code" title="function addFIRA_tc(params, reps, randomize_flag)">addFIRA_tc</a>	function addFIRA_tc(params, reps, randomize_flag)</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

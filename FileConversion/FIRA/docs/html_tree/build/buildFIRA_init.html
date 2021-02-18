@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../>
+  <title>Description of buildFIRA_init</title>
+  <meta name="keywords" content="buildFIRA_init">
+  <meta name="description" content="function buildFIRA_init(spm, include_list, exclude_list, flags, messageH)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">FIRA</a> / <a href="index.html">build</a> / buildFIRA_init.m</div>
+
+<h1>buildFIRA_init
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_init(spm, include_list, exclude_list, flags, messageH)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function buildFIRA_init(spm, include_list, exclude_list, flags, messageH) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function buildFIRA_init(spm, include_list, exclude_list, flags, messageH)
+
+ Initialize FIRA, global data structure, with the following fields:
+       FIRA.header
+       FIRA.spm.(dataTypes)    ... holds dataType object
+       FIRA.raw.(dataTypes)    ... raw data (format specific to
+                                       each data type, empty for now, typically
+                                       filled by buildFIRA_read)
+       FIRA.(dataTypes)        ... parsed data (format specific to each
+                                       data type, empty for now, typically
+                                       alloc'd by builFIRA_alloc and filled
+                                       by buildFIRA_parse)
+
+ Args determine which data types (see FIRA/build/dataTypes) are included.
+ Call parseFIRA_alloc to alloc FIRA.raw.(dataTypes) and FIRA.(dataTypes)
+
+ Arguments:
+   The syntax is quite flexible but a little tricky... the basic
+       idea is that spm specifies: 1) dataTypes to include by default,
+       and 2) various non-default properties of each dataType.
+       The following two arguments -- include_list and exclude_list --
+       let you select from that list of dataTypes.
+
+   Include list also can include arguments to send to each
+       data type constructor method, with &quot;override&quot; values
+       for given value, property pairs. Syntax is
+       &quot;&lt;dataTypeName&gt;&quot;, {optional list of property, value pairs}, ...
+
+   The idea is that spm usually refers to a file that can be
+       used relatively untouched for all data from a particular paradigm,
+       but the actual data retrieved may depend on the session; thus,
+       the flexibility afforded by the include_list and exclude_list, etc.
+
+   spm can come in several forms:
+       1. the (string) name of an spm file that fills FIRA.spm
+           File should expect the single argument &quot;init&quot;, and the given
+           name can be with or without the &quot;spm&quot; prefix (checks both)
+       2. A struct with fields corresponding to &quot;dataTypes&quot;
+           (see FIRA/build/dataTypes for details), each with a value
+           that is an (optional) cell array sent to the type-specific
+           init method as arguments (typically property/value pairs;
+           empty means use defaults)
+       3. A cell array of &lt;dataType&gt;, &lt;arglist&gt; pairs. &lt;arglist&gt;
+           should be a cell array (in fact, if it has length ~= 1 it
+           should be further imbedded in a cell, but that is
+           taken care of automatically)
+
+   flags are optional arguments possibly used by spm (user-specific)
+   messageH is an optional handle to a gui text object for status messages</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="buildFIRA_addTrial.html" class="code" title="function buildFIRA_addTrial(varargin)">buildFIRA_addTrial</a>	function buildFIRA_addTrial(varargin)</li><li><a href="../../html_tree/build/buildScripts/bConnect.html" class="code" title="function bConnect(spm, spike_list, sig_list,keep_matCmds, keep_dio, flags)">bConnect</a>	function bConnect(spm, spike_list, sig_list, ...</li><li><a href="../../html_tree/build/buildScripts/bDefault.html" class="code" title="function bDefault(trials, varargin)">bDefault</a>	function bDefault(trials, varargin)</li><li><a href="../../html_tree/build/buildScripts/bFile.html" class="code" title="function bFile(file_in, file_type, spm, file_out, spike_list,sig_list, keep_matCmds, keep_dio, flags, messageH)">bFile</a>	function bFile(file_in, file_type, spm, file_out, spike_list, ...</li><li><a href="../../html_tree/utilities/convertFIRA.html" class="code" title="function convertFIRA">convertFIRA</a>	function convertFIRA</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <BASE href=../../../../>
+  <title>Description of addTrial (analog)</title>
+  <meta name="keywords" content="addTrial (analog)">
+  <meta name="description" content="function addTrial(an, start_times, data, names, store_rates)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../..//m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">FIRA</a> / <a href="../../index.html">build</a>/ <a href="">dataTypes</a>/ <a href="index.html">@analog</a> / addTrial (analog).m</div>
+
+<h1>addTrial (analog)
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function addTrial(an, start_times, data, names, store_rates)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function addTrial(an, start_times, data, names, store_rates) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> function addTrial(an, start_times, data, names, store_rates)
+
+ addTrial method for class analog. Adds data to the
+   most recent trial.
+
+ Input:
+   an          ... the analog object
+   start_times ... scalar or array of start times
+   data        ... cell array of data arrays
+   names       ... cell array of string names of channels
+   store_rates ... cell array of store rates, one per channel
+
+ Output:
+   nada, but fills FIRA.analog.data(trial,:) with given data</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="alloc.html" class="code" title="function alloc(an, num_trials)">alloc (analog)</a>	function alloc(an, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@awdData/alloc.html" class="code" title="function alloc(a, num_trials)">alloc (awdData)</a>	function alloc(a, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@dio/alloc.html" class="code" title="function alloc(d_, num_trials)">alloc (dio)</a>	function alloc(d_, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@ecodes/alloc.html" class="code" title="function alloc(e_, num_trials)">alloc (ecodes)</a>	function alloc(e_, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@kbdData/alloc.html" class="code" title="function alloc(k, num_trials)">alloc (kbdData)</a>	function alloc(k, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@lpHIDData/alloc.html" class="code" title="function alloc(lp, num_trials)">alloc (lpHIDData)</a>	function alloc(lp, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@matCmds/alloc.html" class="code" title="function alloc(m_, num_trials)">alloc (matCmds)</a>	function alloc(m_, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@spikes/alloc.html" class="code" title="function alloc(s_, num_trials)">alloc (spikes)</a>	function alloc(s_, num_trials)</li><li><a href="../../../../html_tree/build/dataTypes/@trial/alloc.html" class="code" title="function alloc(t, trials)">alloc (trial)</a>	function alloc(t, trials)</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="../../../../html_tree/build/buildFIRA_addTrial.html" class="code" title="function buildFIRA_addTrial(varargin)">buildFIRA_addTrial</a>	function buildFIRA_addTrial(varargin)</li></ul>
+<!-- crossreference -->
+
+
+
+<hr><address>Generated on Thu 03-Aug-2006 15:55:44 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

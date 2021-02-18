@@ -1,0 +1,1 @@
+function se = nanse(x)% nanse(x) returns the std error of the column vector x % or on each of the columns of x if x is a matrix.% 1/15/97 mns wrote itif ~isempty(x)  se = nanstd(x) ./ sqrt(sum(~isnan(x)));else  se = nan;end
