@@ -1,16 +1,18 @@
 %Get the file
-data_path = '/Users/lab/Desktop/MM_training';
+data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+figPath = '/Users/lab/Desktop/MM_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 3;
+currentFile = 5;
 
 theFile= files(currentFile).name;
 temp=load(theFile);
 data=temp.data;
 
 %make a save path to  new folder
+cd(figPath)
 [~,b,~]=fileparts(theFile);
 mkdir(b)
 savePath = b;
@@ -20,13 +22,13 @@ cd(savePath)
 
 % Make some plots
 
-CueType = unique(data.ecodes.data(:,38));
-for c = 1:length(CueType)
-   cueInd = data.ecodes.data(:,38)==CueType(c);
+CueAng = unique(data.ecodes.data(:,38));
+for c = 1:length(CueAng)
+   cueInd = data.ecodes.data(:,38)==CueAng(c);
    pcorrCue(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
 end
 figure
-plot(CueType,pcorrCue,'-o')
+plot(CueAng,pcorrCue,'-o')
 ylim([0 1])
 xlabel('Cue (deg)')
 ylabel('Percent Correct')
@@ -34,9 +36,23 @@ title(b)
 % saveas(gcf,['CorrectbyCue',b],'png')
 exportgraphics(gcf,['CorrectbyCue',b,'.png'],'Resolution',300)
 
+CueType = unique(data.ecodes.data(:,30));
+for c = 1:length(CueType)
+   cueInd = data.ecodes.data(:,30)==CueType(c);
+   pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
+end
+figure
+plot(CueType(1:2),pcorrCueT2(1:2),'-o')
+hold on
+plot(CueType(3:4),pcorrCueT2(3:4),'-o')
+ylim([0 1])
+xlim([200 209])
+xlabel('Cue (name)')
+ylabel('Percent Correct')
+title(b)
+
 corrTrials = data.ecodes.data(:,34);
 actTarg = data.ecodes.data(:,35);
-actTarg
 actTargPlot = actTarg==max(actTarg);
 figure
 plot(movmean(corrTrials,25))

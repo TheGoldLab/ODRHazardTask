@@ -1,5 +1,8 @@
 % YF made for KS and now also for AD
 data_path = '/Users/lab/Desktop/MM_training/RawPLX';
+savePath = '/Users/lab/Desktop/MM_training/MatFiles';
+convertPath = '/Users/lab/Documents/Alice/ODRHazardTask/FileConversion';
+addpath(genpath(convertPath));
 files = dir(fullfile(data_path, '*.plx'));
 nfiles = length(files);
 cd(data_path);
@@ -12,7 +15,7 @@ fname=[fname,'.mat'];
     if exist(fname)==0
 
 
-bFile(fname_plx, [], 'spmADPODR3', fname, 'all', [49,50,51], 0, 1, 0, []);
+bFile(fname_plx, [], 'spmADPODR3', fname, savePath, 'all', [49,50,51], 0, 1, 0, []);
 end
    
 end

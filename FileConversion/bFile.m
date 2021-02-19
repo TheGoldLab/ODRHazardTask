@@ -1,4 +1,4 @@
-function bFile(file_in, file_type, spm, file_out, spike_list, ...
+function bFile(file_in, file_type, spm, file_out, savePath, spike_list, ...
     sig_list, keep_matCmds, keep_dio, flags, messageH)
 %function bFile(file_in, file_type, spm, file_out, spike_list, ...
 %    sig_list, keep_matCmds, keep_dio, flags, messageH)
@@ -64,9 +64,9 @@ flag_noTrial = buildFIRA_cleanup(true); % YF 20160712
 %     saveFIRA(file_out);
 % end
 if ~isempty(file_out)&&(flag_noTrial==0)
-    cd('/Users/lab/Desktop/MM_training')
+    cd(savePath)
     saveFIRA(file_out);
-        cd('/Users/lab/Desktop/MM_training')
+        cd(savePath)
 
 end
 
