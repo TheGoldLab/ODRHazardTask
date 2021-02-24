@@ -5,7 +5,7 @@ files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 5;
+currentFile = 7;
 
 theFile= files(currentFile).name;
 temp=load(theFile);
@@ -50,6 +50,7 @@ xlim([200 209])
 xlabel('Cue (name)')
 ylabel('Percent Correct')
 title(b)
+exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
 
 corrTrials = data.ecodes.data(:,34);
 actTarg = data.ecodes.data(:,35);
@@ -80,11 +81,22 @@ title(['Sacc End Incorrect ',b])
 saveas(gcf,['SaccEnd',b],'png')
 
 
-% figure
-% hold on
-% centerInd = find(data.ecodes.data(:,38)==CueType(3));
-% for t = 1:length(centerInd)
-%     eyeX = data.analog.data(centerInd(t),2).values;
-%     eyeY = data.analog.data(centerInd(t),3).values;
-%     plot(eyeX,eyeY)
-% end
+figure
+centerInd = find(data.ecodes.data(:,38)==180);
+for t = 1:length(centerInd)
+    subplot(2,1,corrTrials(centerInd(t))+1)
+    eyeX = data.analog.data(centerInd(t),2).values(1200:(end-800));
+    eyeY = data.analog.data(centerInd(t),3).values(1200:(end-800));
+    hold on
+    plot(eyeX,eyeY)
+end
+
+figure
+notcenterInd = find(data.ecodes.data(:,38)~=180);
+for t = 1:length(notcenterInd)
+    subplot(2,1,corrTrials(notcenterInd(t))+1)
+    eyeX = data.analog.data(notcenterInd(t),2).values(1200:(end-800));
+    eyeY = data.analog.data(notcenterInd(t),3).values(1200:(end-800));
+    hold on
+    plot(eyeX,eyeY)
+end
