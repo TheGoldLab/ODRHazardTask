@@ -8,14 +8,20 @@ cd(data_path);
 currentFile = 7;
 
 theFile= files(currentFile).name;
+[~,b,~]=fileparts(theFile);
+savePath = b;
+
 temp=load(theFile);
 data=temp.data;
 
 %make a save path to  new folder
 cd(figPath)
-[~,b,~]=fileparts(theFile);
-mkdir(b)
-savePath = b;
+
+newFileStr = input('Is this a new file?(y/n):','s');
+if strcmpi(newFileStr,'y')
+    newMatFile
+end
+
 b(strfind(b,'_'))='-';
 
 cd(savePath)
@@ -43,8 +49,10 @@ for c = 1:length(CueType)
 end
 figure
 plot(CueType(1:2),pcorrCueT2(1:2),'-o')
-hold on
-plot(CueType(3:4),pcorrCueT2(3:4),'-o')
+if length(CueType)>2
+    hold on
+    plot(CueType(3:4),pcorrCueT2(3:4),'-o')
+end
 ylim([0 1])
 xlim([200 209])
 xlabel('Cue (name)')
@@ -54,7 +62,7 @@ exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
 
 corrTrials = data.ecodes.data(:,34);
 actTarg = data.ecodes.data(:,35);
-actTargPlot = actTarg==max(actTarg);
+actTargPlot = actTarg==135&~isnan(actTarg);
 figure
 plot(movmean(corrTrials,25))
 hold on
