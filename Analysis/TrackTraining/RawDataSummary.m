@@ -7,9 +7,10 @@ cd(data_path);
 f1=figure;
 colors = colormap('lines');
 f2=figure;
+f3=figure;
 
 
-for f = 1:7
+for f = 1:4
     currentFile = nfiles-f+1;
     theFile= files(currentFile).name;
     temp=load(theFile);
@@ -21,7 +22,7 @@ for f = 1:7
     CueType = unique(data.ecodes.data(:,30));
     for c = 1:length(CueType)
        cueInd = data.ecodes.data(:,30)==CueType(c);
-       pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
+       pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./sum(~isnan(data.ecodes.data(cueInd,13)));   
     end
     figure(f1)
     hold on
@@ -32,18 +33,21 @@ for f = 1:7
         plot(CueType(3:4),pcorrCueT2(3:4),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
+    if length(CueType)>4
+        hold on
+        plot(CueType(5:6),pcorrCueT2(3:4),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    end
     ylim([0 1])
-    xlim([200 209])
+    xlim([200 309])
     xlabel('Cue (name)')
     ylabel('Percent Correct')
     title('P(correct) by cue across sessions')
-    legend TOGGLE
-
     
     figure(f2)
-    corrTrials = data.ecodes.data(:,34);
-    actTarg = data.ecodes.data(:,35);
-    actTargPlot = actTarg==135&~isnan(actTarg);
+    corrTrials = data.ecodes.data(~isnan(data.ecodes.data(:,13)),34);
+    actTarg = data.ecodes.data(~isnan(data.ecodes.data(:,13)),35);
+    actTargPlot = ~isnan(actTarg)&(actTarg==135|actTarg==45);
     subplot(7,1,f)
     plot(movmean(corrTrials,25),'-','Color',colors(f,:))
     hold on
@@ -52,4 +56,21 @@ for f = 1:7
     xlabel('Trials')
     ylabel('Percent Correct')
     title(name)
+    
+    figure(f3)
+    centerInd = find(data.ecodes.data(~isnan(data.ecodes.data(:,13)),38)==180);
+    corrTrialsCenter = corrTrials(centerInd);
+    actTargPlotCenter=actTargPlot(centerInd);
+    subplot(7,1,f)
+    plot(movmean(corrTrialsCenter,25),'-','Color',colors(f,:))
+    hold on
+    plot(actTargPlotCenter,'s')
+    pbaspect([7 1 1])
+    xlabel('Trials')
+    ylabel('Percent Correct')
+    title(['Center Cue Mov. Avg. ',name])
 end
+
+figure(f1)
+legend TOGGLE
+legend('location', 'Best')

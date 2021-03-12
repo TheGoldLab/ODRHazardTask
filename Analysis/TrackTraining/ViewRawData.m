@@ -6,7 +6,7 @@ files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 8;
+currentFile = 11;
 
 theFile= files(currentFile).name;
 [~,b,~]=fileparts(theFile);
