@@ -6,7 +6,7 @@ files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 11;
+currentFile = 13;
 
 theFile= files(currentFile).name;
 [~,b,~]=fileparts(theFile);
@@ -34,8 +34,13 @@ for c = 1:length(CueAng)
    cueInd = data.ecodes.data(:,38)==CueAng(c);
    pcorrCue(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
 end
+CueAngCon = CueAng;
+if sum(CueAng>270)>0
+    CueAngLeftConv = CueAng(CueAng>270)-360;
+    CueAngCon(CueAng>270)= CueAngLeftConv;
+end
 figure
-plot(CueAng,pcorrCue,'-o')
+plot(CueAngCon,pcorrCue,'o')
 ylim([0 1])
 xlabel('Cue (deg)')
 ylabel('Percent Correct')
@@ -63,7 +68,7 @@ exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
 
 corrTrials = data.ecodes.data(:,34);
 actTarg = data.ecodes.data(:,35);
-actTargPlot = actTarg==135&~isnan(actTarg);
+actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
 figure
 plot(movmean(corrTrials,25))
 hold on
@@ -75,7 +80,7 @@ title(['Moving Avg. ',b])
 % saveas(gcf,['MovAvg',b],'png')
 exportgraphics(gcf,['MovAvg',b,'.png'],'Resolution',400)
 
-centerInd = find(data.ecodes.data(:,38)==180);
+centerInd = find(data.ecodes.data(:,38)==0|data.ecodes.data(:,38)==180);
 corrTrials = data.ecodes.data(:,34);
 corrTrialsCenter = corrTrials(centerInd);
 actTarg = data.ecodes.data(:,35);

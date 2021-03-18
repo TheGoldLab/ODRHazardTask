@@ -281,7 +281,7 @@ end
                 case {2,3,4,5}  % memory & visual & ring
                     %Pick the active target to see if correct
                     ActiveTarg=getFIRA_ec(tti, {'trialid'});
-                    if mod(ActiveTarg,2)==0
+                    if mod(ActiveTarg,10)<5
                         TargX=t1_x;
                         TargY=t1_y;
                         ActiveAngle=t1_angle;
