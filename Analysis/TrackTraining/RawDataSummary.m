@@ -9,6 +9,7 @@ colors = colormap('lines');
 f2=figure;
 f3=figure;
 f4=figure;
+f5=figure;
 
 numLookAt = 7;
 
@@ -98,6 +99,87 @@ for f = 1:numLookAt
     xlabel('Trials')
     ylabel('Percent Correct')
     title(['Center Cue Mov. Avg. ',name])
+    
+    figure(f5)
+    finTrialInd = find(~isnan(data.ecodes.data(:,13)));
+    sampfreq=data.analog.acquire_rate(end);
+    tTargAcq = data.ecodes.data(finTrialInd,13)-data.ecodes.data(finTrialInd,5);
+    for tr = 1:length(finTrialInd)
+        acqX(tr) = data.analog.data(finTrialInd(tr),2).values(round(tTargAcq(tr)));
+        acqY(tr) = data.analog.data(finTrialInd(tr),3).values(round(tTargAcq(tr)));
+    end
+
+    choiceDir = acqY>0;
+
+    cueFin =data.ecodes.data(finTrialInd,38);
+    actTargFin = data.ecodes.data(finTrialInd,35);
+    actTargFinUp = (actTargFin==135|actTargFin==45);
+
+    pChooseUp =[];
+    for c = 1:length(CueAng)
+       cueInd =[];
+        cueInd = cueFin==CueAng(c);
+       pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
+    end
+    CueChoose = [CueAngCon pChooseUp'];
+    CueChoose = sortrows(CueChoose);
+    subplot(1,3,1)
+    hold on
+    plot(CueChoose(:,1),CueChoose(:,2),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    ylim([0 1])
+    pbaspect([1 1 1])
+    ylabel('pChooseUp')
+    xlabel('cue (deg)')
+    title('Session')
+    pChooseUp =[];
+    for c = 1:length(CueAng)
+        cueInd =[];
+       taskInd = (data.ecodes.data(finTrialInd,29)==3);
+        cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
+       pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
+    end
+    CueChoose = [CueAngCon pChooseUp'];
+    CueChoose = sortrows(CueChoose);
+    CueChoose(isnan(CueChoose(:,2)),:)=[];
+    subplot(1,3,2)
+    hold on
+    plot(CueChoose(:,1),CueChoose(:,2),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    ylim([0 1])
+    pbaspect([1 1 1])
+    title('Random')
+    pChooseUp =[];
+    CueChoose=[];
+    for c = 1:length(CueAng)
+        cueInd =[];
+       taskInd = (data.ecodes.data(finTrialInd,29)==2)&(~actTargFinUp);
+        cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
+       pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
+    end
+    CueChoose = [CueAngCon pChooseUp'];
+    CueChoose = sortrows(CueChoose);
+    CueChoose(isnan(CueChoose(:,2)),:)=[];
+    subplot(1,3,3)
+    plot(CueChoose(:,1),CueChoose(:,2),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    ylim([0 1])
+    pbaspect([1 1 1])
+    hold on
+    pChooseUp =[];
+    CueChoose =[];
+    for c = 1:length(CueAng)
+        cueInd =[];
+       taskInd = (data.ecodes.data(finTrialInd,29)==2)&(actTargFinUp);
+        cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
+       pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
+    end
+    CueChoose = [CueAngCon pChooseUp'];
+    CueChoose = sortrows(CueChoose);
+    CueChoose(isnan(CueChoose(:,2)),:)=[];
+    plot(CueChoose(:,1),CueChoose(:,2),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    title('No change')
 end
 
 figure(f1)
@@ -108,3 +190,7 @@ figure(f2)
 legend TOGGLE
 pbaspect([5 2 1])
 legend('location', 'southwest')
+
+figure(f5)
+legend TOGGLE
+legend('location', 'BestOutside')

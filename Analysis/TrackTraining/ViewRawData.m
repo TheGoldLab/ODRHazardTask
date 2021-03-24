@@ -152,8 +152,6 @@ saveas(gcf,['TargAcq',b],'png')
 
 choiceDir = acqY>0;
 
-%choiceDir = data.ecodes.data(~isnan(data.ecodes.data(:,13)),39)<180;
-%corrTrialsFin = data.ecodes.data(~isnan(data.ecodes.data(:,13)),34);
 cueFin =data.ecodes.data(finTrialInd,38);
 actTargFin = data.ecodes.data(finTrialInd,35);
 actTargFinUp = (actTargFin==135|actTargFin==45);
