@@ -10,8 +10,9 @@ f2=figure;
 f3=figure;
 f4=figure;
 
+numLookAt = 7;
 
-for f = 1:3
+for f = 1:numLookAt
     currentFile = nfiles-f+1;
     theFile= files(currentFile).name;
     temp=load(theFile);
@@ -39,6 +40,7 @@ for f = 1:3
     plot(CueAngCorr(:,1),CueAngCorr(:,2),'-o','Color',colors(f,:),'DisplayName',...
         name)
     ylim([0 1])
+    pbaspect([3 2 1])
     xlabel('Cue (deg)')
     ylabel('Percent Correct')
     title('P(correct) by cue angle across sessions')
@@ -49,21 +51,24 @@ for f = 1:3
        pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./sum(~isnan(data.ecodes.data(cueInd,13)));   
     end
     figure(f2)
-    hold on
-    plot(CueType(1:2),pcorrCueT2(1:2),'-o','Color',colors(f,:),'DisplayName',...
-        name)
-    if length(CueType)>2
+    if sum(CueType<205)>0
         hold on
-        plot(CueType(3:4),pcorrCueT2(3:4),'-o','Color',colors(f,:),'DisplayName',...
+        plot(CueType(CueType<205),pcorrCueT2(CueType<205),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
-    if length(CueType)>4
+    if sum(CueType>=205&CueType<300)>0
         hold on
-        plot(CueType(5:6),pcorrCueT2(3:4),'-o','Color',colors(f,:),'DisplayName',...
+        plot(CueType(CueType>=205&CueType<300),pcorrCueT2(CueType>=205&CueType<300),'-o','Color',colors(f,:),'DisplayName',...
+        name)
+    end
+    if sum(CueType>=300)>0
+        hold on
+        plot(CueType(CueType>=300)-90,pcorrCueT2(CueType>=300),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
     ylim([0 1])
-    xlim([200 309])
+    xlim([190 220])
+    pbaspect([7 1 1])
     xlabel('Cue (name)')
     ylabel('Percent Correct')
     title('P(correct) by cue across sessions')
@@ -72,11 +77,11 @@ for f = 1:3
     corrTrials = data.ecodes.data(~isnan(data.ecodes.data(:,13)),34);
     actTarg = data.ecodes.data(~isnan(data.ecodes.data(:,13)),35);
     actTargPlot = ~isnan(actTarg)&(actTarg==135|actTarg==45);
-    subplot(7,1,f)
+    subplot(numLookAt,1,f)
     plot(movmean(corrTrials,25),'-','Color',colors(f,:))
     hold on
     plot(actTargPlot,'s')
-    pbaspect([7 1 1])
+    pbaspect([5 1 1])
     xlabel('Trials')
     ylabel('Percent Correct')
     title(name)
@@ -85,11 +90,11 @@ for f = 1:3
     centerInd = find(data.ecodes.data(~isnan(data.ecodes.data(:,13)),38)==0|data.ecodes.data(~isnan(data.ecodes.data(:,13)),38)==180);
     corrTrialsCenter = corrTrials(centerInd);
     actTargPlotCenter=actTargPlot(centerInd);
-    subplot(7,1,f)
+    subplot(numLookAt,1,f)
     plot(movmean(corrTrialsCenter,25),'-','Color',colors(f,:))
     hold on
     plot(actTargPlotCenter,'s')
-    pbaspect([7 1 1])
+    pbaspect([5 1 1])
     xlabel('Trials')
     ylabel('Percent Correct')
     title(['Center Cue Mov. Avg. ',name])
@@ -97,8 +102,9 @@ end
 
 figure(f1)
 legend TOGGLE
-legend('location', 'Best')
+legend('location', 'Southeast')
 
 figure(f2)
 legend TOGGLE
-legend('location', 'Best')
+pbaspect([5 2 1])
+legend('location', 'southwest')
