@@ -6,7 +6,7 @@ files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 17;
+currentFile = 19;
 
 theFile= files(currentFile).name;
 [~,b,~]=fileparts(theFile);
@@ -60,7 +60,7 @@ if length(CueType)>2
     plot(CueType(3:4),pcorrCueT2(3:4),'-o')
 end
 ylim([0 1])
-xlim([200 209])
+xlim([200 220])
 xlabel('Cue (name)')
 ylabel('Percent Correct')
 title(['T2 correct ',b])
@@ -148,6 +148,15 @@ xlabel('x eye position')
 ylabel('y eye position')
 title(['Target Acquisition ',b])
 saveas(gcf,['TargAcq',b],'png')
+
+figure
+for t = 1:length(finTrialInd)
+    
+    eyeX = data.analog.data(finTrialInd(t),2).values(1200:round(tTargAcq(t)));
+    eyeY = data.analog.data(finTrialInd(t),3).values(1200:round(tTargAcq(t)));
+    hold on
+    plot(eyeX,eyeY)
+end
 
 
 choiceDir = acqY>0;
