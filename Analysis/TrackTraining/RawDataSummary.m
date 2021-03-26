@@ -64,11 +64,11 @@ for f = 1:numLookAt
     end
     if sum(CueType>=300)>0
         hold on
-        plot(CueType(CueType>=300)-90,pcorrCueT2(CueType>=300),'-o','Color',colors(f,:),'DisplayName',...
+        plot(CueType(CueType>=300)-80,pcorrCueT2(CueType>=300),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
     ylim([0 1])
-    xlim([190 220])
+    xlim([190 240])
     pbaspect([7 1 1])
     xlabel('Cue (name)')
     ylabel('Percent Correct')
