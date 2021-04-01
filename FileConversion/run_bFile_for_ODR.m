@@ -1,6 +1,10 @@
 % YF made for KS and now also for AD
-data_path = '/Users/lab/Desktop/MM_training/RawPLX';
-savePath = '/Users/lab/Desktop/MM_training/MatFiles';
+% data_path = '/Users/lab/Desktop/MM_training/RawPLX';
+% savePath = '/Users/lab/Desktop/MM_training/MatFiles';
+
+data_path = '/Users/lab/Desktop/Ci_training/RawPLX';
+savePath = '/Users/lab/Desktop/Ci_training/MatFiles';
+
 convertPath = '/Users/lab/Documents/Alice/ODRHazardTask/FileConversion';
 addpath(genpath(convertPath));
 files = dir(fullfile(data_path, '*.plx'));

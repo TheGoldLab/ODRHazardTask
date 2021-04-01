@@ -1,12 +1,14 @@
 %Get the file
 addpath(genpath('/Users/lab/Documents/Alice/ODRHazardTask/Analysis/TrackTraining'))
-data_path = '/Users/lab/Desktop/MM_training/MatFiles';
-figPath = '/Users/lab/Desktop/MM_training/Figures';
+% data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+% figPath = '/Users/lab/Desktop/MM_training/Figures';
+data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 19;
+currentFile = 10;
 
 theFile= files(currentFile).name;
 [~,b,~]=fileparts(theFile);
@@ -32,7 +34,7 @@ cd(savePath)
 CueAng = unique(data.ecodes.data(:,38));
 for c = 1:length(CueAng)
    cueInd = data.ecodes.data(:,38)==CueAng(c);
-   pcorrCue(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
+   pcorrCue(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
 end
 CueAngCon = CueAng;
 if sum(CueAng>270)>0
@@ -51,14 +53,14 @@ exportgraphics(gcf,['CorrectbyCue',b,'.png'],'Resolution',300)
 CueType = unique(data.ecodes.data(:,30));
 for c = 1:length(CueType)
    cueInd = data.ecodes.data(:,30)==CueType(c)&data.ecodes.data(:,29)==2;
-   pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
+   pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
 end
 figure
-plot(CueType(1:2),pcorrCueT2(1:2),'-o')
-if length(CueType)>2
+plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o')
+
     hold on
-    plot(CueType(3:4),pcorrCueT2(3:4),'-o')
-end
+    plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o')
+
 ylim([0 1])
 xlim([200 220])
 xlabel('Cue (name)')

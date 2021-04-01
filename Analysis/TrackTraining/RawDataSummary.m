@@ -1,6 +1,9 @@
 %Get the file
 data_path = '/Users/lab/Desktop/MM_training/MatFiles';
 figPath = '/Users/lab/Desktop/MM_training/Figures';
+
+% data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+% figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
@@ -27,7 +30,7 @@ for f = 1:numLookAt
     CueAng = unique(data.ecodes.data(:,38));
     for c = 1:length(CueAng)
        cueInd = data.ecodes.data(:,38)==CueAng(c);
-       pcorrCue(c) =  sum(data.ecodes.data(cueInd,34))./length(data.ecodes.data(cueInd,34));   
+       pcorrCue(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));  
     end
     CueAngCon = CueAng;
     if sum(CueAng>270)>0
@@ -49,7 +52,7 @@ for f = 1:numLookAt
     CueType = unique(data.ecodes.data(:,30));
     for c = 1:length(CueType)
        cueInd = data.ecodes.data(:,30)==CueType(c);
-       pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,34))./sum(~isnan(data.ecodes.data(cueInd,13)));   
+       pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));     
     end
     figure(f2)
     if sum(CueType<205)>0
