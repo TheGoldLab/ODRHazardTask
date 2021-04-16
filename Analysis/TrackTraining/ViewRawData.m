@@ -1,14 +1,14 @@
 %Get the file
 addpath(genpath('/Users/lab/Documents/Alice/ODRHazardTask/Analysis/TrackTraining'))
-% data_path = '/Users/lab/Desktop/MM_training/MatFiles';
-% figPath = '/Users/lab/Desktop/MM_training/Figures';
-data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
-figPath = '/Users/lab/Desktop/Ci_training/Figures';
+data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+figPath = '/Users/lab/Desktop/MM_training/Figures';
+% data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+% figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
 
-currentFile = 10;
+currentFile = nfiles;
 
 theFile= files(currentFile).name;
 [~,b,~]=fileparts(theFile);
