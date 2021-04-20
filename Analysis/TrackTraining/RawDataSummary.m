@@ -1,9 +1,9 @@
 %Get the file
-% data_path = '/Users/lab/Desktop/MM_training/MatFiles';
-% figPath = '/Users/lab/Desktop/MM_training/Figures';
+data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+figPath = '/Users/lab/Desktop/MM_training/Figures';
 
-data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
-figPath = '/Users/lab/Desktop/Ci_training/Figures';
+% data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+% figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
