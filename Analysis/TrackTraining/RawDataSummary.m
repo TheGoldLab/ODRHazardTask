@@ -55,14 +55,14 @@ for f = 1:numLookAt
        pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));     
     end
     figure(f2)
-    if sum(CueType<205)>0
+    if sum(CueType<209)>0
         hold on
-        plot(CueType(CueType<205),pcorrCueT2(CueType<205),'-o','Color',colors(f,:),'DisplayName',...
+        plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
-    if sum(CueType>=205&CueType<300)>0
+    if sum(CueType>=209&CueType<300)>0
         hold on
-        plot(CueType(CueType>=205&CueType<300),pcorrCueT2(CueType>=205&CueType<300),'-o','Color',colors(f,:),'DisplayName',...
+        plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o','Color',colors(f,:),'DisplayName',...
         name)
     end
     if sum(CueType>=300)>0
