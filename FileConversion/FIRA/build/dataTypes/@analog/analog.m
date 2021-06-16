@@ -43,7 +43,7 @@ an = struct( ...
     'keep_sigs',     'all',  ... % 'all' or list of signal numbers
     'names',         {names},... % names of analog channels .. filled in last->first
     'new_names',     [],     ... % {<index> <name>; ...}
-    'gain',          10.2,   ... % set in Rex
+    'gain',          20.4,   ... % set in Rex
     'acquire_rates', [],     ... % override of acquire rates
     'resample',      [],     ... % possibly new sample rates {'channel' <sr>; ...}
     'reoffset',      [],     ... % possibly new offset {'channel' <offset>; ...}
