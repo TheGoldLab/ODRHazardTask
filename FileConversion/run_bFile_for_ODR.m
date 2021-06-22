@@ -1,9 +1,9 @@
 % YF made for KS and now also for AD
-data_path = '/Users/lab/Desktop/MM_training/RawPLX';
-savePath = '/Users/lab/Desktop/MM_training/MatFiles';
+% data_path = '/Users/lab/Desktop/MM_training/RawPLX';
+% save_path = '/Users/lab/Desktop/MM_training/MatFiles';
 
-% data_path = '/Users/lab/Desktop/Ci_training/RawPLX';
-% savePath = '/Users/lab/Desktop/Ci_training/MatFiles';
+data_path = '/Users/lab/Desktop/Ci_training/RawPLX';
+save_path = '/Users/lab/Desktop/Ci_training/MatFiles';
 
 convertPath = '/Users/lab/Documents/Alice/ODRHazardTask/FileConversion';
 addpath(genpath(convertPath));
@@ -19,7 +19,7 @@ fname=[fname,'.mat'];
     if exist(fname)==0
 
 
-bFile(fname_plx, [], 'spmADPODR3', fname, savePath, 'all', [49,50,51], 0, 1, 0, []);
+bFile(fname_plx, [], 'spmADPODR4', fname, 'all', [49,50,51], 0, 1, 0, [],save_path);
 end
    
 end

@@ -160,59 +160,59 @@ elseif strcmp(func, 'trial')
         sfixoff='';
     end
     
-    % Get reward time from dio
-%     if isfield(FIRA, 'dio')
-%         
-%         %                 rewon = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
-%         %                 rewoff = getDIO_time(FIRA.dio{tti}, 0, 2, 2);
-%         %                 rewsize = rewoff - rewon;
-%         
-%         %                 Yunshu 2016-05-17
-%         %                 deal with >1 beep rew by sum up all the valve opening time
-%         fname = FIRA.header.filename{1,1};
-%         fname_date = str2double(fname(5:10));
-%         if fname_date > 150203
-%             ndio_standard = 4;
-%         else
-%             ndio_standard = 2;
-%         end
-%         dio_tti = FIRA.dio{tti};
-%         ntti = sum(dio_tti(:,2)==0 & dio_tti(:,3)==2);
-%         n_beep = floor(ntti/ndio_standard);
-%         if mod(ntti,ndio_standard)~=0
-%             % sprintf('trial %.d mod(ntti)/%.d ~= 0',tti,ndio_standard)
-%             if mod(ntti,ndio_standard)==1
-%                 t_open = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
-%                 t_close = t_open;
-%             elseif mod(ntti,ndio_standard)>1
-%                 t_open = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
-%                 t_close = getDIO_time(FIRA.dio{tti}, 0, 2, 2);
-%             end
-%         else
-%             t_open = nan(n_beep,1);
-%             t_close = nan(n_beep,1);
-%             for i_beep = 1:n_beep
-%                 ind_open = i_beep*4-3;
-%                 ind_close = i_beep*4-1;
-%                 t_open(i_beep) = getDIO_time(FIRA.dio{tti}, 0, 2, ind_open);
-%                 t_close(i_beep) = getDIO_time(FIRA.dio{tti}, 0, 2, ind_close);
-%             end
-%         end
-%         % rewsize_beep = t_close - t_open;
-%         % rewsize = sum(rewsize_beep);
-%         
-%         % for if numel(t_open) = 0 because of plx error or truncation
-%         if numel(t_open) == 0
-%             % OLscore = -3; % this trial will be excluded in later analyses
-%             setFIRA_ec(tti, 'rew_on', 0);
-%         else
-%             setFIRA_ec(tti, 'rew_on', 1);
-%             %                       rewon = t_open(1);
-%             %                       rewoff = t_close(end); % rewsize < (rewoff- rewon), because take away the time between pulses
-%             %                       setFIRA_ec(tti, {'rew_off'}, rewoff);
-%             %                       setFIRA_ec(tti, {'reward'}, rewsize);
-%         end
-%     end
+    %     % Get reward time from dio
+    %     if isfield(FIRA, 'dio')
+    %
+    %         %                 rewon = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
+    %         %                 rewoff = getDIO_time(FIRA.dio{tti}, 0, 2, 2);
+    %         %                 rewsize = rewoff - rewon;
+    %
+    %         %                 Yunshu 2016-05-17
+    %         %                 deal with >1 beep rew by sum up all the valve opening time
+    %         fname = FIRA.header.filename{1,1};
+    %         fname_date = str2double(fname(5:10));
+    %         if fname_date > 150203
+    %             ndio_standard = 4;
+    %         else
+    %             ndio_standard = 2;
+    %         end
+    %         dio_tti = FIRA.dio{tti};
+    %         ntti = sum(dio_tti(:,2)==0 & dio_tti(:,3)==2);
+    %         n_beep = floor(ntti/ndio_standard);
+    %         if mod(ntti,ndio_standard)~=0
+    %             % sprintf('trial %.d mod(ntti)/%.d ~= 0',tti,ndio_standard)
+    %             if mod(ntti,ndio_standard)==1
+    %                 t_open = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
+    %                 t_close = t_open;
+    %             elseif mod(ntti,ndio_standard)>1
+    %                 t_open = getDIO_time(FIRA.dio{tti}, 0, 2, 1);
+    %                 t_close = getDIO_time(FIRA.dio{tti}, 0, 2, 2);
+    %             end
+    %         else
+    %             t_open = nan(n_beep,1);
+    %             t_close = nan(n_beep,1);
+    %             for i_beep = 1:n_beep
+    %                 ind_open = i_beep*4-3;
+    %                 ind_close = i_beep*4-1;
+    %                 t_open(i_beep) = getDIO_time(FIRA.dio{tti}, 0, 2, ind_open);
+    %                 t_close(i_beep) = getDIO_time(FIRA.dio{tti}, 0, 2, ind_close);
+    %             end
+    %         end
+    %         % rewsize_beep = t_close - t_open;
+    %         % rewsize = sum(rewsize_beep);
+    %
+    %         % for if numel(t_open) = 0 because of plx error or truncation
+    %         if numel(t_open) == 0
+    %             % OLscore = -3; % this trial will be excluded in later analyses
+    %             setFIRA_ec(tti, 'rew_on', 0);
+    %         else
+    %             setFIRA_ec(tti, 'rew_on', 1);
+    %             %                       rewon = t_open(1);
+    %             %                       rewoff = t_close(end); % rewsize < (rewoff- rewon), because take away the time between pulses
+    %             %                       setFIRA_ec(tti, {'rew_off'}, rewoff);
+    %             %                       setFIRA_ec(tti, {'reward'}, rewsize);
+    %         end
+    %     end
     
     % parse saccades
     if ~isempty(sfixoff)
@@ -296,18 +296,22 @@ elseif strcmp(func, 'trial')
                 
                 % PLOTZ -- set to true to see trial-by-trial eye
                 % positions
-                if false
+                if true
                     
-                    if n<9
-                        Targ0X=getFIRA_ec(tti, {'t2_x'});
-                        Targ0Y=getFIRA_ec(tti, {'t2_y'});
+                    if correctTargetAngle == getFIRA_ec(tti, 't1_angle')
+                        TcX = getFIRA_ec(tti, 't1_x');
+                        TcY = getFIRA_ec(tti, 't1_y');
+                        TeX = getFIRA_ec(tti, 't2_x');
+                        TeY = getFIRA_ec(tti, 't2_y');
                     else
-                        Targ0X=getFIRA_ec(tti, {'t1_x'});
-                        Targ0Y=getFIRA_ec(tti, {'t1_y'});
+                        TcX = getFIRA_ec(tti, 't2_x');
+                        TcY = getFIRA_ec(tti, 't2_y');
+                        TeX = getFIRA_ec(tti, 't1_x');
+                        TeY = getFIRA_ec(tti, 't1_y');
                     end
                     co = {'b' 'm' 'k'};
-                    xs = FIRA.analog.data(tti, 2).values;
-                    ys = FIRA.analog.data(tti, 3).values;
+                    xs = nanrunmean(FIRA.analog.data(tti, 2).values, 40);
+                    ys = nanrunmean(FIRA.analog.data(tti, 3).values, 40);
                     ts = (0:length(xs)-1) + FIRA.analog.data(tti, 2).start_time - getFIRA_ec(tti, sfixoff);
                     subplot(2,1,1); cla reset; hold on;
                     plot([-2500 1500], [0 0], 'k:');
@@ -321,8 +325,8 @@ elseif strcmp(func, 'trial')
                     
                     subplot(2,1,2); cla reset; hold on;
                     plot(xs(ts>0), ys(ts>0), '-', 'Color', [0.5 0.5 0.5]);
-                    plot(TargX, TargY, 'go', 'MarkerFaceColor', 'g', 'MarkerSize', 15);
-                    plot(Targ0X, Targ0Y, 'ro', 'MarkerFaceColor', 'r', 'MarkerSize', 15);
+                    plot(TcX, TcY, 'go', 'MarkerFaceColor', 'g', 'MarkerSize', 15);
+                    plot(TeX, TeY, 'ro', 'MarkerFaceColor', 'r', 'MarkerSize', 15);
                     for ss = 1:size(sacs, 1)
                         plot(sacs(ss, 5), sacs(ss, 6), 'd', 'MarkerSize', 15, 'Color', co{ss}, 'MarkerFaceColor', co{ss});
                     end
