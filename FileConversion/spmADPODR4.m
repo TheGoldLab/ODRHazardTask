@@ -296,7 +296,7 @@ elseif strcmp(func, 'trial')
                 
                 % PLOTZ -- set to true to see trial-by-trial eye
                 % positions
-                if true
+                if false
                     
                     if correctTargetAngle == getFIRA_ec(tti, 't1_angle')
                         TcX = getFIRA_ec(tti, 't1_x');

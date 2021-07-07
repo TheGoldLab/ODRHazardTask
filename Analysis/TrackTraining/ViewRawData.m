@@ -29,12 +29,39 @@ b(strfind(b,'_'))='-';
 
 cd(savePath)
 
+global FIRA
+FIRA = data;
+clear data
+getF = @(t,n) FIRA.ecodes.data(t, strcmp(n, FIRA.ecodes.name));
+
 % Make some plots
 
-CueAng = unique(data.ecodes.data(:,38));
+if sum(unique(getF(':', 'taskid')) == 2)|...
+   sum(unique(getF(':', 'taskid')) == 3)   
+
+aODRind = getF(':', 'taskid') == 2|getF(':', 'taskid') == 3;
+
+corrInd = getF(aODRind, 'Offline_Score') == 1;
+errInd = getF(aODRind, 'Offline_Score') == 0;
+ncInd = getF(aODRind, 'Offline_Score') == -1;
+ccInd = getF(aODRind, 'Offline_Score') == -3;
+
+sacEndX = getF(aODRind, 'sac_endx');
+sacEndY = getF(aODRind, 'sac_endy');
+
+actTarg = getF(aODRind, 'active_target');
+t1_x = nanmedian(getF(':', 't1_x'));
+t1_y = nanmedian(getF(':', 't1_y'));
+t2_x = nanmedian(getF(':', 't2_x'));
+t2_y = nanmedian(getF(':', 't2_y'));
+% t1_a = nanmedian(getF(':', 't1_angle'));
+% t2_a = nanmedian(getF(':', 't2_angle'));
+
+
+CueAng = unique(getF(aODRind, 'sample_angle'));
 for c = 1:length(CueAng)
-   cueInd = data.ecodes.data(:,38)==CueAng(c);
-   pcorrCue(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
+   cueInd = getF(aODRind, 'sample_angle')==CueAng(c);
+   pcorrCue(c) =  sum(corrInd&cueInd)./(sum(corrInd&cueInd)+sum(errInd&cueInd));   
 end
 CueAngCon = CueAng;
 if sum(CueAng>270)>0
@@ -68,8 +95,9 @@ ylabel('Percent Correct')
 title(['T2 correct ',b])
 exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
 
-corrTrials = data.ecodes.data(:,34);
-actTarg = data.ecodes.data(:,35);
+% corrTrials = data.ecodes.data(:,34);
+% corrTrials = data.ecodes.data(:,40)==1;
+% actTarg = data.ecodes.data(:,35);
 actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
 figure
 plot(movmean(corrTrials,25))
@@ -99,10 +127,10 @@ title(['Moving Avg. Center Cue ',b])
 % saveas(gcf,['MovAvg',b],'png')
 exportgraphics(gcf,['MovAvgCenter',b,'.png'],'Resolution',400)
 
-
-
-sacEndX = data.ecodes.data(:,43);
-sacEndY = data.ecodes.data(:,44);
+% 
+% 
+% sacEndX = data.ecodes.data(:,43);
+% sacEndY = data.ecodes.data(:,44);
 
 figure 
 subplot(2,1,1)
@@ -137,12 +165,19 @@ saveas(gcf,['SaccEnd',b],'png')
 %     plot(eyeX,eyeY)
 % end
 
-finTrialInd = find(~isnan(data.ecodes.data(:,13)));
-sampfreq=data.analog.acquire_rate(end);
-tTargAcq = data.ecodes.data(finTrialInd,13)-data.ecodes.data(finTrialInd,5);
+% finTrialInd = find(~isnan(data.ecodes.data(:,13)));
+finTrialInd = find(~isnan(getF(':', 'targacq')));
+sampfreq=FIRA.analog.acquire_rate(end);
+% tTargAcq = data.ecodes.data(finTrialInd,13)-data.ecodes.data(finTrialInd,5);
+tTargAcq = getF(intersect(finTrialInd,find(aODRind)), 'targacq')-getF(intersect(finTrialInd,find(aODRind)), 'fp_on');
 for tr = 1:length(finTrialInd)
-    acqX(tr) = data.analog.data(finTrialInd(tr),2).values(round(tTargAcq(tr)));
-    acqY(tr) = data.analog.data(finTrialInd(tr),3).values(round(tTargAcq(tr)));
+    if intersect(finTrialInd(tr),find(aODRind))
+        acqX(tr) = FIRA.analog.data(intersect(finTrialInd(tr),find(aODRind)),2).values(round(tTargAcq(tr)));
+        acqY(tr) = FIRA.analog.data(intersect(finTrialInd(tr),find(aODRind)),3).values(round(tTargAcq(tr)));
+    else
+        acqX(tr) = nan;
+        acqY(tr) = nan;
+    end
 end
 figure
 plot(acqX,acqY,'.')
@@ -228,3 +263,5 @@ CueChoose(isnan(CueChoose(:,2)),:)=[];
 plot(CueChoose(:,1),CueChoose(:,2),'co-')
 title('No change')
 exportgraphics(gcf,['pChooseUp',b,'.png'],'Resolution',400)
+
+end
