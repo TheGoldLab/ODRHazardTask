@@ -36,6 +36,22 @@ getF = @(t,n) FIRA.ecodes.data(t, strcmp(n, FIRA.ecodes.name));
 
 % Make some plots
 
+if sum(unique(getF(':', 'taskid')) == 1)
+    VMGSind = getF(':', 'taskid') == 1;
+    
+    sacEndX = getF(VMGSind, 'sac_endx');
+    sacEndY = getF(VMGSind, 'sac_endy');
+    
+    figure
+    plot(sacEndX,sacEndY,'.')
+    xlim([-30 30])
+    ylim([-30 30])
+    title(['VGS/MGS Saccades ',b])
+    saveas(gcf,['VSGMGSSacc',b],'png')
+end
+
+
+
 if sum(unique(getF(':', 'taskid')) == 2)|...
    sum(unique(getF(':', 'taskid')) == 3)   
 
@@ -77,107 +93,108 @@ title(['Session Correct ', b])
 % saveas(gcf,['CorrectbyCue',b],'png')
 exportgraphics(gcf,['CorrectbyCue',b,'.png'],'Resolution',300)
 
-CueType = unique(data.ecodes.data(:,30));
-for c = 1:length(CueType)
-   cueInd = data.ecodes.data(:,30)==CueType(c)&data.ecodes.data(:,29)==2;
-   pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
-end
-figure
-plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o')
-
-    hold on
-    plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o')
-
-ylim([0 1])
-xlim([200 220])
-xlabel('Cue (name)')
-ylabel('Percent Correct')
-title(['T2 correct ',b])
-exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
-
+% CueType = unique(data.ecodes.data(:,30));
+% for c = 1:length(CueType)
+%    cueInd = data.ecodes.data(:,30)==CueType(c)&data.ecodes.data(:,29)==2;
+%    pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
+% end
+% figure
+% plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o')
+% 
+%     hold on
+%     plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o')
+% 
+% ylim([0 1])
+% xlim([200 220])
+% xlabel('Cue (name)')
+% ylabel('Percent Correct')
+% title(['T2 correct ',b])
+% exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
+% 
+% % corrTrials = data.ecodes.data(:,34);
+% % corrTrials = data.ecodes.data(:,40)==1;
+% % actTarg = data.ecodes.data(:,35);
+% actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
+% figure
+% plot(movmean(corrTrials,25))
+% hold on
+% plot(actTargPlot,'s')
+% pbaspect([4 1 1])
+% xlabel('Trials')
+% ylabel('Percent Correct')
+% title(['Moving Avg. ',b])
+% % saveas(gcf,['MovAvg',b],'png')
+% exportgraphics(gcf,['MovAvg',b,'.png'],'Resolution',400)
+% 
+% centerInd = find(data.ecodes.data(:,38)==0|data.ecodes.data(:,38)==180);
 % corrTrials = data.ecodes.data(:,34);
-% corrTrials = data.ecodes.data(:,40)==1;
+% corrTrialsCenter = corrTrials(centerInd);
 % actTarg = data.ecodes.data(:,35);
-actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
-figure
-plot(movmean(corrTrials,25))
-hold on
-plot(actTargPlot,'s')
-pbaspect([4 1 1])
-xlabel('Trials')
-ylabel('Percent Correct')
-title(['Moving Avg. ',b])
-% saveas(gcf,['MovAvg',b],'png')
-exportgraphics(gcf,['MovAvg',b,'.png'],'Resolution',400)
-
-centerInd = find(data.ecodes.data(:,38)==0|data.ecodes.data(:,38)==180);
-corrTrials = data.ecodes.data(:,34);
-corrTrialsCenter = corrTrials(centerInd);
-actTarg = data.ecodes.data(:,35);
-actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
-actTargPlotCenter=actTargPlot(centerInd);
-figure
-plot(movmean(corrTrialsCenter,25))
-hold on
-plot(actTargPlotCenter,'s')
-pbaspect([4 1 1])
-xlabel('Trials')
-ylabel('Percent Correct')
-title(['Moving Avg. Center Cue ',b])
-% saveas(gcf,['MovAvg',b],'png')
-exportgraphics(gcf,['MovAvgCenter',b,'.png'],'Resolution',400)
-
-% 
-% 
-% sacEndX = data.ecodes.data(:,43);
-% sacEndY = data.ecodes.data(:,44);
-
-figure 
-subplot(2,1,1)
-plot(sacEndX(corrTrials==1),sacEndY(corrTrials==1),'.b')
-title(['Sacc End Correct ',b])
-subplot(2,1,2)
-plot(sacEndX(corrTrials==0),sacEndY(corrTrials==0),'.r')
-xlabel('x eye position')
-ylabel('y eye position')
-title(['Sacc End Incorrect ',b])
-saveas(gcf,['SaccEnd',b],'png')
-
-
-
-
+% actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
+% actTargPlotCenter=actTargPlot(centerInd);
 % figure
-% for t = 1:length(centerInd)
-%     subplot(2,1,corrTrials(centerInd(t))+1)
-%     eyeX = data.analog.data(centerInd(t),2).values(1200:(end-800));
-%     eyeY = data.analog.data(centerInd(t),3).values(1200:(end-800));
-%     hold on
-%     plot(eyeX,eyeY)
-% end
+% plot(movmean(corrTrialsCenter,25))
+% hold on
+% plot(actTargPlotCenter,'s')
+% pbaspect([4 1 1])
+% xlabel('Trials')
+% ylabel('Percent Correct')
+% title(['Moving Avg. Center Cue ',b])
+% % saveas(gcf,['MovAvg',b],'png')
+% exportgraphics(gcf,['MovAvgCenter',b,'.png'],'Resolution',400)
 % 
-% figure
-% notcenterInd = find(data.ecodes.data(:,38)~=180);
-% for t = 1:length(notcenterInd)
-%     subplot(2,1,corrTrials(notcenterInd(t))+1)
-%     eyeX = data.analog.data(notcenterInd(t),2).values(1200:(end-800));
-%     eyeY = data.analog.data(notcenterInd(t),3).values(1200:(end-800));
-%     hold on
-%     plot(eyeX,eyeY)
-% end
+% % 
+% % 
+% % sacEndX = data.ecodes.data(:,43);
+% % sacEndY = data.ecodes.data(:,44);
+% 
+% figure 
+% subplot(2,1,1)
+% plot(sacEndX(corrTrials==1),sacEndY(corrTrials==1),'.b')
+% title(['Sacc End Correct ',b])
+% subplot(2,1,2)
+% plot(sacEndX(corrTrials==0),sacEndY(corrTrials==0),'.r')
+% xlabel('x eye position')
+% ylabel('y eye position')
+% title(['Sacc End Incorrect ',b])
+% saveas(gcf,['SaccEnd',b],'png')
+% 
+% 
+% 
+% 
+% % figure
+% % for t = 1:length(centerInd)
+% %     subplot(2,1,corrTrials(centerInd(t))+1)
+% %     eyeX = data.analog.data(centerInd(t),2).values(1200:(end-800));
+% %     eyeY = data.analog.data(centerInd(t),3).values(1200:(end-800));
+% %     hold on
+% %     plot(eyeX,eyeY)
+% % end
+% % 
+% % figure
+% % notcenterInd = find(data.ecodes.data(:,38)~=180);
+% % for t = 1:length(notcenterInd)
+% %     subplot(2,1,corrTrials(notcenterInd(t))+1)
+% %     eyeX = data.analog.data(notcenterInd(t),2).values(1200:(end-800));
+% %     eyeY = data.analog.data(notcenterInd(t),3).values(1200:(end-800));
+% %     hold on
+% %     plot(eyeX,eyeY)
+% % end
 
 % finTrialInd = find(~isnan(data.ecodes.data(:,13)));
 finTrialInd = find(~isnan(getF(':', 'targacq')));
+aODRfindTrialInd = intersect(finTrialInd,find(aODRind));
 sampfreq=FIRA.analog.acquire_rate(end);
 % tTargAcq = data.ecodes.data(finTrialInd,13)-data.ecodes.data(finTrialInd,5);
-tTargAcq = getF(intersect(finTrialInd,find(aODRind)), 'targacq')-getF(intersect(finTrialInd,find(aODRind)), 'fp_on');
-for tr = 1:length(finTrialInd)
-    if intersect(finTrialInd(tr),find(aODRind))
-        acqX(tr) = FIRA.analog.data(intersect(finTrialInd(tr),find(aODRind)),2).values(round(tTargAcq(tr)));
-        acqY(tr) = FIRA.analog.data(intersect(finTrialInd(tr),find(aODRind)),3).values(round(tTargAcq(tr)));
-    else
-        acqX(tr) = nan;
-        acqY(tr) = nan;
-    end
+tTargAcq = getF(aODRfindTrialInd, 'targacq')-getF(aODRfindTrialInd, 'fp_on');
+for tr = 1:length(aODRfindTrialInd)
+%     if intersect(finTrialInd(tr),find(aODRind))
+        acqX(tr) = FIRA.analog.data(aODRfindTrialInd(tr),2).values(round(tTargAcq(tr)));
+        acqY(tr) = FIRA.analog.data(aODRfindTrialInd(tr),3).values(round(tTargAcq(tr)));
+%     else
+%         acqX(tr) = nan;
+%         acqY(tr) = nan;
+%     end
 end
 figure
 plot(acqX,acqY,'.')
@@ -187,10 +204,10 @@ title(['Target Acquisition ',b])
 saveas(gcf,['TargAcq',b],'png')
 
 figure
-for t = 1:length(finTrialInd)
+for t = 1:length(aODRfindTrialInd)
     
-    eyeX = data.analog.data(finTrialInd(t),2).values(1200:round(tTargAcq(t)));
-    eyeY = data.analog.data(finTrialInd(t),3).values(1200:round(tTargAcq(t)));
+    eyeX = FIRA.analog.data(aODRfindTrialInd(t),2).values(1200:round(tTargAcq(t)));
+    eyeY = FIRA.analog.data(aODRfindTrialInd(t),3).values(1200:round(tTargAcq(t)));
     hold on
     plot(eyeX,eyeY)
 end
@@ -198,8 +215,8 @@ end
 
 choiceDir = acqY>0;
 
-cueFin =data.ecodes.data(finTrialInd,38);
-actTargFin = data.ecodes.data(finTrialInd,35);
+cueFin =getF(intersect(finTrialInd,find(aODRind)), 'sample_angle');
+actTargFin = getF(intersect(finTrialInd,find(aODRind)), 'active_target');
 actTargFinUp = (actTargFin==135|actTargFin==45);
 
 pChooseUp =[];
@@ -221,7 +238,7 @@ title('Session')
 pChooseUp =[];
 for c = 1:length(CueAng)
     cueInd =[];
-   taskInd = (data.ecodes.data(finTrialInd,29)==3);
+   taskInd = getF(intersect(finTrialInd,find(aODRind)), 'taskid') == 3;
     cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
    pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
 end
@@ -237,7 +254,7 @@ pChooseUp =[];
 CueChoose=[];
 for c = 1:length(CueAng)
     cueInd =[];
-   taskInd = (data.ecodes.data(finTrialInd,29)==2)&(~actTargFinUp);
+   taskInd = (getF(intersect(finTrialInd,find(aODRind)), 'taskid') ==2)&(~actTargFinUp)&~isnan(actTargFin);
     cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
    pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
 end
@@ -253,7 +270,7 @@ pChooseUp =[];
 CueChoose =[];
 for c = 1:length(CueAng)
     cueInd =[];
-   taskInd = (data.ecodes.data(finTrialInd,29)==2)&(actTargFinUp);
+   taskInd = (getF(intersect(finTrialInd,find(aODRind)), 'taskid') ==2)&(actTargFinUp);
     cueInd = intersect(find(cueFin==CueAng(c)),find(taskInd));
    pChooseUp(c) =  sum(choiceDir(cueInd))./length(choiceDir(cueInd));   
 end
@@ -261,7 +278,7 @@ CueChoose = [CueAngCon pChooseUp'];
 CueChoose = sortrows(CueChoose);
 CueChoose(isnan(CueChoose(:,2)),:)=[];
 plot(CueChoose(:,1),CueChoose(:,2),'co-')
-title('No change')
+title('Low Hazard')
 exportgraphics(gcf,['pChooseUp',b,'.png'],'Resolution',400)
 
 end
