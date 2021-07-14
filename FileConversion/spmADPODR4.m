@@ -267,7 +267,7 @@ elseif strcmp(func, 'trial')
             if any(taskid == 2:5)
 
                 % Pick the active target to see if correct
-                if getFIRA_ec(tti, 'trialid')-200<9
+                if getFIRA_ec(tti, 'trialid')-100*taskid<9
                     correctTargetAngle = getFIRA_ec(tti, 't1_angle');
                     errorTargetAngle = getFIRA_ec(tti, 't2_angle');
                 else

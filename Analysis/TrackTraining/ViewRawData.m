@@ -1,9 +1,9 @@
 %Get the file
 addpath(genpath('/Users/lab/Documents/Alice/ODRHazardTask/Analysis/TrackTraining'))
-data_path = '/Users/lab/Desktop/MM_training/MatFiles';
-figPath = '/Users/lab/Desktop/MM_training/Figures';
-% data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
-% figPath = '/Users/lab/Desktop/Ci_training/Figures';
+% data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+% figPath = '/Users/lab/Desktop/MM_training/Figures';
+data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);
@@ -51,6 +51,23 @@ if sum(unique(getF(':', 'taskid')) == 1)
 end
 
 
+if sum(unique(getF(':', 'taskid')) == 0)
+    calibind = getF(':', 'taskid') == 0;
+    
+    figure
+    for t = 1:length(calibind)
+
+        eyeX = FIRA.analog.data(t,2).values;
+        eyeY = FIRA.analog.data(t,3).values;
+        hold on
+        plot(eyeX,eyeY)
+    end
+    xlim([-30 30])
+    ylim([-30 30])
+    title(['Calibration ',b])
+    saveas(gcf,['Calib',b],'png')
+end
+
 
 if sum(unique(getF(':', 'taskid')) == 2)|...
    sum(unique(getF(':', 'taskid')) == 3)   
@@ -93,38 +110,40 @@ title(['Session Correct ', b])
 % saveas(gcf,['CorrectbyCue',b],'png')
 exportgraphics(gcf,['CorrectbyCue',b,'.png'],'Resolution',300)
 
-% CueType = unique(data.ecodes.data(:,30));
-% for c = 1:length(CueType)
-%    cueInd = data.ecodes.data(:,30)==CueType(c)&data.ecodes.data(:,29)==2;
-%    pcorrCueT2(c) =  sum(data.ecodes.data(cueInd,41)==1)./(sum(data.ecodes.data(cueInd,41)==1)+sum(data.ecodes.data(cueInd,41)==0));   
-% end
-% figure
-% plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o')
-% 
-%     hold on
-%     plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o')
-% 
-% ylim([0 1])
-% xlim([200 220])
-% xlabel('Cue (name)')
-% ylabel('Percent Correct')
-% title(['T2 correct ',b])
-% exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
-% 
+
+CueType = unique(getF(aODRind, 'trialid'));
+for c = 1:length(CueType)
+   cueInd = getF(aODRind, 'trialid')==CueType(c)&getF(aODRind, 'taskid')==2;
+   pcorrCueT2(c) =  sum(corrInd&cueInd)./(sum(corrInd&cueInd)+sum(errInd&cueInd));   
+end
+figure
+plot(CueType(CueType<209),pcorrCueT2(CueType<209),'-o')
+
+    hold on
+    plot(CueType(CueType>=209&CueType<300),pcorrCueT2(CueType>=209&CueType<300),'-o')
+
+ylim([0 1])
+xlim([200 220])
+xlabel('Cue (name)')
+ylabel('Percent Correct')
+title(['T2 correct ',b])
+exportgraphics(gcf,['CorrectbyDir',b,'.png'],'Resolution',300)
+
 % % corrTrials = data.ecodes.data(:,34);
 % % corrTrials = data.ecodes.data(:,40)==1;
 % % actTarg = data.ecodes.data(:,35);
-% actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
-% figure
-% plot(movmean(corrTrials,25))
-% hold on
-% plot(actTargPlot,'s')
-% pbaspect([4 1 1])
-% xlabel('Trials')
-% ylabel('Percent Correct')
-% title(['Moving Avg. ',b])
-% % saveas(gcf,['MovAvg',b],'png')
-% exportgraphics(gcf,['MovAvg',b,'.png'],'Resolution',400)
+actTargPlot = (actTarg==135|actTarg==45)&~isnan(actTarg);
+actTargPlot= actTargPlot(corrInd|errInd);
+figure
+plot(movmean(corrInd(corrInd|errInd),25))
+hold on
+plot(actTargPlot,'s')
+pbaspect([4 1 1])
+xlabel('Trials')
+ylabel('Percent Correct')
+title(['Moving Avg. ',b])
+% saveas(gcf,['MovAvg',b],'png')
+exportgraphics(gcf,['MovAvg',b,'.png'],'Resolution',400)
 % 
 % centerInd = find(data.ecodes.data(:,38)==0|data.ecodes.data(:,38)==180);
 % corrTrials = data.ecodes.data(:,34);
