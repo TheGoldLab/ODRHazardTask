@@ -36,9 +36,10 @@ for currentFile =  1:nfiles
     %NumTriBreakdown contains the number of trials that went into the
     %averages
     %AvgFR organized by (Ev, Hrate,Active,SubsetSelection(eg corr/err),neuron number)
+    Alice=1; %If alice is using this/wants the bar graphs from the peridod summary
     for subset=1%:3
        [AvgFr{subset},STDFR{subset}, NumTriBreakdown{subset}]=MonkeySpikeAnalysisSubset(TaskTrials,subset,(numneuro*(subset))+2+totalFigs*(currentFile-1),b,TACP_Cuttoff);  
-        [PeriodMeanFR{subset},PeriodStdFR{subset}]=MonkeySpikeAnalysisSubset_Period_Summary(TaskTrials,subset,(numneuro*(subset))+5+totalFigs*(currentFile-1),b,TACP_Cuttoff);
+        [PeriodMeanFR{subset},PeriodStdFR{subset}]=MonkeySpikeAnalysisSubset_Period_Summary(TaskTrials,subset,(numneuro*(subset))+5+totalFigs*(currentFile-1),b,TACP_Cuttoff,Alice);
         
     end
     if ~isempty(MemTrials)
@@ -69,3 +70,4 @@ for currentFile =  1:nfiles
     % clear Collection
     
 end
+
