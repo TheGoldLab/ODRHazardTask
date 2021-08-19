@@ -1,7 +1,7 @@
 function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
-
+%test
 %%Code to analyize the bias in responses based on SACP, current target, and
 %sample mean
 
