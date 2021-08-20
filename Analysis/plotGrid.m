@@ -16,6 +16,7 @@ ylim([-6 6])
 xlim([-6 6])
 axis square
 h = circle(0,0,7)
+h = circle(0,0,6)
 ax.YTick = -6:6;
 ax.XTick = -6:6;
 
