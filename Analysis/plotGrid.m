@@ -1,6 +1,8 @@
+addpath(genpath(pwd))
+cd('~/Box/GoldLab/Data/Physiology/AODR')
 A =imread('MMchambercrop.png');
 success = [2 2 3 1 3 0 -2 -3;1 0 0 -1 -3 -4 -2 -2];
-bone = [2 3 4 2 3; 2 1 0 -2 -5];
+bone = [2 3 4 2 3 3 3 ; 2 1 0 -2 -5 -2 -1];
 pixels= size(A,1);
 
 figure
