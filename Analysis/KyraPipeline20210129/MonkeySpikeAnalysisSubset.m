@@ -15,7 +15,7 @@ function [AvgFRTotal,STDFRTotal, NumTri ] = MonkeySpikeAnalysisSubset(data, subb
 datahold=data;
 clear Mfr
 clear Sfr
-col={'r','--r','b','--b';'m','--m','c','--c'};
+col={'r','--r','b','--b';'m','--m','c','--c';'g', 'g--', 'y', 'y--'};
 
 %First, need to split up by evidence,
 % Put sample angles on -180<x<180, useful for when targets are 45/315,
@@ -150,7 +150,7 @@ for neuro=1:unique(datahold.Num_Neuron);
                         %pre-Sample Off period
                         baseline=0; %nanmean(MNSpkCnt(1:4));
                         hold on
-                        plot(bins(2:end-1),AvgFRPart-baseline, col{H,S+2*(A-1)});
+                        plot(bins(2:end-1),AvgFRPart-baseline, col{H,S+2*(A-1)},'DisplayName', ['H= ', num2str(Hs(H)), ' T1 Active ',namer{S}]);
                         
                         title({['Sample Angle= ', num2str(Evidences(Ev))];['Neuron ' datahold.Properties.VariableNames{24+neuro}]},'Interpreter', 'none');
                         
@@ -165,8 +165,8 @@ for neuro=1:unique(datahold.Num_Neuron);
                 end
             end
         end
-        
-        legend(['H= ', num2str(Hs(1)), ' T1 Active ',namer{1}], ['H= ', num2str(Hs(1)),' T1 Active ',namer{2}],['H= ', num2str(Hs(1)),' T2 Active ',namer{1}], ['H= ', num2str(Hs(1)),' T2 Active ',namer{2}],['H= ', num2str(Hs(2)), ' T1 Active ',namer{1}], ['H= ', num2str(Hs(2)),' T1 Active ',namer{2}],['H= ', num2str(Hs(2)),' T2 Active ',namer{1}], ['H= ', num2str(Hs(2)),' T2 Active ',namer{2}],'location','eastoutside','AutoUpdate','off');
+        legend TOGGLE ON
+        legend('location','eastoutside','AutoUpdate','off');
         
         %Put a marker of when FP off on all plots
         for Ev=1:9
@@ -182,7 +182,11 @@ set(gcf, 'PaperPositionMode', 'Auto','PaperUnits', 'Inches', 'PaperSize', [pos(3
 saveas(gcf,[b,'_neuron_', num2str(neuro), '_PETH_',label,'.pdf'])  
     if neuro==datahold.Num_Neuron
         NumTri=num2cell(NumTri);
-        NumTri=cell2table(NumTri,'VariableNames',{['HL_A1_',namer{1}],['HL_A1_',namer{2}],['HL_A2_',namer{1}],['HL_A2_',namer{2}],['HH_A1_',namer{1}],['HH_A1_',namer{2}],['HH_A2_',namer{1}],['HH_A2_',namer{2}]},'Rownames',{['Ev_',num2str(Evidences(1))],['Ev_',num2str(Evidences(2))],['Ev_',num2str(Evidences(3))],['Ev_',num2str(Evidences(4))],['Ev_',num2str(Evidences(5))],['Ev_',num2str(Evidences(6))],['Ev_',num2str(Evidences(7))],['Ev_',num2str(Evidences(8))],['Ev_',num2str(Evidences(9))]});
+        if length(Hs)>2
+            NumTri=cell2table(NumTri);
+        else
+            NumTri=cell2table(NumTri,'VariableNames',{['HL_A1_',namer{1}],['HL_A1_',namer{2}],['HL_A2_',namer{1}],['HL_A2_',namer{2}],['HH_A1_',namer{1}],['HH_A1_',namer{2}],['HH_A2_',namer{1}],['HH_A2_',namer{2}]},'Rownames',{['Ev_',num2str(Evidences(1))],['Ev_',num2str(Evidences(2))],['Ev_',num2str(Evidences(3))],['Ev_',num2str(Evidences(4))],['Ev_',num2str(Evidences(5))],['Ev_',num2str(Evidences(6))],['Ev_',num2str(Evidences(7))],['Ev_',num2str(Evidences(8))],['Ev_',num2str(Evidences(9))]});
+        end
     end
 end
 end

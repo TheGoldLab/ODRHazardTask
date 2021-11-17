@@ -1,4 +1,4 @@
-function [ z, NumTrialsLLR ] = FindHRateQuant(data,figgy,b)
+function [ z, NumTrialsLLR,binInd ] = FindHRateQuant(data,figgy,b)
 
 %Pick/parse actual data files
 % reparse=1;
@@ -164,6 +164,7 @@ for Hrate=1:length(unique(datahold.H_Rate))
         
         for i=1:length(bins)
             pChange(i)=nanmean(Switch(strong_evidence_before(EFT2(strong_evidence_before)==bins(i))));
+            binInd{i} = strong_evidence_before(EFT2(strong_evidence_before)==bins(i));
             errbarholder(i)=bootstrapCurve( timesResample,Switch(strong_evidence_before(EFT2(strong_evidence_before)==bins(i))));
             
         end
@@ -273,6 +274,9 @@ if length(Locations)==9
     elseif size(NumTrialsLLR,1)==2 && Hs>.5
         NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'},'RowNames',{'T1_HH', 'T2_HH'});
         z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'},'RowNames',{'High_H'});
+    elseif size(NumTrialsLLR,1)>4
+        NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'});
+        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'});
     else
         NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'},'RowNames',{'T1_HL', 'T2_HL', 'T1_HH', 'T2_HH'});
         z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'},'RowNames',{'Low_H','High_H'});

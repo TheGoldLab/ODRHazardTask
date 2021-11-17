@@ -1,9 +1,11 @@
 %Get the file
 addpath(genpath('/Users/lab/Documents/Alice/ODRHazardTask/Analysis/TrackTraining'))
+data_path = 'C:\Users\alice\Desktop\Ci_training';%'C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Cicero';
+figPath = 'C:\Users\alice\Desktop\Ci_training';
 % data_path = '/Users/lab/Desktop/MM_training/MatFiles';
 % figPath = '/Users/lab/Desktop/MM_training/Figures';
-data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
-figPath = '/Users/lab/Desktop/Ci_training/Figures';
+% data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
+% figPath = '/Users/lab/Desktop/Ci_training/Figures';
 files = dir(fullfile(data_path, '*.mat'));
 nfiles = length(files);
 cd(data_path);

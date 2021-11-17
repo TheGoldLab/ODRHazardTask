@@ -1,4 +1,4 @@
-function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile )
+function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile ,data_path)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,7 +11,7 @@ function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile )
 %decision period
 
 %Gather Data
-data_path = 'C:\Users\kyras\Desktop\UPenn 17-18\Matlab_AODR\ODRHazardTask-main\ConvertedFiles';%AVData/794'; % DatatoParse2';
+% data_path = 'C:\Users\kyras\Desktop\UPenn 17-18\Matlab_AODR\ODRHazardTask-main\ConvertedFiles';%AVData/794'; % DatatoParse2';
 % files = dir(fullfile(data_path, '*.mat'));
 % nfiles = length(files);
 cd(data_path);

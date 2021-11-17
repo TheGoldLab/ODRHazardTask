@@ -1,6 +1,9 @@
 %Get the file
-data_path = '/Users/lab/Desktop/MM_training/MatFiles';
-figPath = '/Users/lab/Desktop/MM_training/Figures';
+data_path = 'C:\Users\alice\Desktop\Ci_training';%'C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Cicero';
+figPath = 'C:\Users\alice\Desktop\Ci_training';
+
+% data_path = '/Users/lab/Desktop/MM_training/MatFiles';
+% figPath = '/Users/lab/Desktop/MM_training/Figures';
 
 % data_path = '/Users/lab/Desktop/Ci_training/MatFiles';
 % figPath = '/Users/lab/Desktop/Ci_training/Figures';
@@ -14,7 +17,7 @@ f3=figure;
 f4=figure;
 f5=figure;
 
-numLookAt = 7;
+numLookAt = nfiles%7;
 
 for f = 1:numLookAt
     currentFile = nfiles-f+1;

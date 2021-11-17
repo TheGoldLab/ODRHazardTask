@@ -175,6 +175,7 @@ if keep_analog>0
     % <timestamp (ms)> <ch1 (mV)> <ch2 (mV)>...
     % adcounts = evcounts(300:315);
     ind_ads = find(adcounts>0);
+%     ind_ads = [49, 50, 51];
     [nad,adgains] = plx_adchan_gains(OpenedFileName);
     [nad,adnames] = plx_adchan_names(OpenedFileName);
     [n,adfreq] = plx_adchan_freqs(OpenedFileName);
@@ -190,6 +191,7 @@ if keep_analog>0
  adgains=adgains(ind_ads);
     
     
+    ind_ads = [49, 50, 51];   
     if ~isempty(ind_ads)
         n_ch = length(ind_ads);
         allad = cell(n_ch,1);
