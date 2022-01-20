@@ -13,7 +13,7 @@ addpath 'C:\Users\alice\Documents\Projects\ODRHazardTask\FileConversion'
 
 
 
-for currentFile =  18:nfiles
+for currentFile = nfiles
     %(responses within this many degree of target are considered a response, rest are NaN)
     ResponseCutoff=30;
     theFile= files(currentFile).name;
@@ -34,7 +34,7 @@ for currentFile =  18:nfiles
     cd(b)
     TACP_Cuttoff=5;
     
-         [Fits,TrialNum,evInd]=FindHRateQuant(TaskTrials,1+totalFigs*(currentFile-1),b);
+          [Fits,TrialNum,evInd]=FindHRateQuant(TaskTrials,1+totalFigs*(currentFile-1),b);
 
     % Subsets are 1= Corr/Err, 2=Stay/Switch, 3=Chose 1/Chose 2
     %AFR and STDFR contain the mean/StD FR across all the trials for a

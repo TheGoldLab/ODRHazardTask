@@ -40,6 +40,9 @@ clear fr
 num_sessions = size(unique(datahold{:,1}),1);
 fileNAMES=unique(datahold{:,1});
 allFR=cell(1,2);
+
+AvgFRTotal = cell(length(LLR_Ch),length(unique(datahold.H_Rate)),unique(datahold.Num_Neuron));
+STDFRTotal = cell(length(LLR_Ch),length(unique(datahold.H_Rate)),unique(datahold.Num_Neuron));
 for neuro=1:unique(datahold.Num_Neuron)
 %     fig=figure(figgy+neuro-1);
     fig = figure;
@@ -155,7 +158,7 @@ for neuro=1:unique(datahold.Num_Neuron)
                         %pre-Sample Off period
                         baseline=0; %nanmean(MNSpkCnt(1:4));
                         hold on
-                        plot(bins(2:end-1),AvgFRPart-baseline, col{2,H+H-1});
+                        plot(bins(2:end-1),AvgFRPart-baseline, col{2,H+H-1},'DisplayName',['H= ', num2str(Hs(H))]);
                         
                         title({['LLR_Change= ', num2str(LLR_Ch(L))];['Neuron ' datahold.Properties.VariableNames{24+neuro}(end-3:end)]},'Interpreter', 'none');
                         
@@ -175,8 +178,8 @@ for neuro=1:unique(datahold.Num_Neuron)
         end
         
 %         legend(['H= ', num2str(Hs(1)), ' T1 Active ',namer{1}], ['H= ', num2str(Hs(1)),' T1 Active ',namer{2}],['H= ', num2str(Hs(1)),' T2 Active ',namer{1}], ['H= ', num2str(Hs(1)),' T2 Active ',namer{2}],['H= ', num2str(Hs(2)), ' T1 Active ',namer{1}], ['H= ', num2str(Hs(2)),' T1 Active ',namer{2}],['H= ', num2str(Hs(2)),' T2 Active ',namer{1}], ['H= ', num2str(Hs(2)),' T2 Active ',namer{2}],'location','eastoutside','AutoUpdate','off');
-        legend(['H= ', num2str(Hs(1))], ['H= ', num2str(Hs(2))] );
-        
+%         legend(['H= ', num2str(Hs(1))], ['H= ', num2str(Hs(2))] );
+        legend TOGGLE ON
         %Put a marker of when FP off on all plots
         for L=1%:9
 %             nexttile(L)
@@ -194,16 +197,16 @@ saveas(gcf,[datahold.Session{1,:}(1:13),'_neuron_', num2str(neuro), '_PETH_','LL
 %         NumTri=cell2table(NumTri,'VariableNames',{['HL_A1_',namer{1}],['HL_A1_',namer{2}],['HL_A2_',namer{1}],['HL_A2_',namer{2}],['HH_A1_',namer{1}],['HH_A1_',namer{2}],['HH_A2_',namer{1}],['HH_A2_',namer{2}]},'Rownames',{['L_',num2str(Lidences(1))],['L_',num2str(Lidences(2))],['L_',num2str(Lidences(3))],['L_',num2str(Lidences(4))],['L_',num2str(Lidences(5))],['L_',num2str(Lidences(6))],['L_',num2str(Lidences(7))],['L_',num2str(Lidences(8))],['L_',num2str(Lidences(9))]});
 %     end
 
-for neuro = 1:unique(datahold.Num_Neuron)
+% for neuro = 1:unique(datahold.Num_Neuron)
     figure
     hold on
     for H=1:length(Hs) 
         NormFR = nan(length(LLR_Ch),length(AvgFRPart));
         FRMat = vertcat(AvgFRTotal{:,H,neuro});
         FRMat(FRMat==0)=0.0000000001;
-        NormFR = (FRMat-repmat(mean(FRMat),length(LLR_Ch),1))./FRMat;
+        NormFR = (FRMat-repmat(nanmean(FRMat),length(LLR_Ch),1))./repmat(nanmean(FRMat),length(LLR_Ch),1); %(std(FRMat)./sqrt(length(LLR_Ch)));
 
-        plot(LLR_Ch,mean(NormFR(:,1:find(bins<FPOfftime,1,'last')),2),col{2,H+H-1},'DisplayName',['H= ', num2str(Hs(H))],'LineWidth',2)
+        plot(LLR_Ch,nanmean(NormFR(:,1:find(bins<FPOfftime,1,'last')),2),col{2,H+H-1},'DisplayName',['H= ', num2str(Hs(H))],'LineWidth',2)
         ylim([-1,1])
         xlim([-4,4])
         title({'LLR Change vs Normalized FR';fileNAMES{1}(1:13);['Neuron ' datahold.Properties.VariableNames{24+neuro}(end-3:end)]},'Interpreter', 'none');
@@ -217,8 +220,8 @@ for neuro = 1:unique(datahold.Num_Neuron)
     set(gcf,'Position',[7.8000    1.9167    6.8583    6.2250]);
     pos=get(gcf, 'Position');
     set(gcf, 'PaperPositionMode', 'Auto','PaperUnits', 'Inches', 'PaperSize', [pos(3),pos(4)]);
-    saveas(gcf,[datahold.Session{1,:}(1:13),'_NeurometricFxn.pdf']) 
-end
+    saveas(gcf,[datahold.Session{1,:}(1:13),'Neuron ' datahold.Properties.VariableNames{24+neuro}(end-3:end),'_NeurometricFxn.pdf']) 
+% end
 
 end
 end

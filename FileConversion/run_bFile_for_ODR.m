@@ -22,7 +22,7 @@ files = dir(fullfile(data_path, '*.plx'));
 nfiles = length(files);
 cd(data_path);
 
-for i=33%1:nfiles
+for i=nfiles%1:nfiles
     
 fname_plx = files(i).name;
 fname = fname_plx(1:end-4);
@@ -30,7 +30,7 @@ fname=[fname,'.mat'];
     if exist(fname)==0
 
 
-bFile(fname_plx, [], 'spmADPODR4', fname, 'all', [49,50,51], 0, 1, 0, [],save_path);
+bFile(fname_plx, [], 'spmADPODR4', fname, 'all',[49,50,51] , 0, 1, 0, [],save_path); %'all',{[18,49,50,51],{'LFP','pupil','eye_x','eye_y'}}
     end
   
 clear fname fname_plx
