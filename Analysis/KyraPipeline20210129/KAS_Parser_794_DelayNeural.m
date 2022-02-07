@@ -1,4 +1,4 @@
-function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile ,data_path)
+function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile,data_path )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,7 +11,7 @@ function [ allData ] = KAS_Parser_794_DelayNeural( Cutoff, Type, data, theFile ,
 %decision period
 
 %Gather Data
-% data_path = 'C:\Users\kyras\Desktop\UPenn 17-18\Matlab_AODR\ODRHazardTask-main\ConvertedFiles';%AVData/794'; % DatatoParse2';
+
 % files = dir(fullfile(data_path, '*.mat'));
 % nfiles = length(files);
 cd(data_path);
@@ -88,7 +88,7 @@ for i=1:sum(UnbrokenTrials)
 
     end
 end
-   
+   if task>1
 test=find(UnbrokenTrials==1);
 test2=~isnan(Choice2);
 test3=test(test2);
@@ -96,7 +96,7 @@ temp=zeros(size(UnbrokenTrials));
 temp(test3)=1;
 UnbrokenTrials=(temp==1);
  UnbrokenTrials_Index=find(UnbrokenTrials~=0);
- 
+   end
    Choice2=nans(size(data.ecodes.data(UnbrokenTrials,41)));
   ActiveTarg=data.ecodes.data(UnbrokenTrials,35);
   RespAng=data.ecodes.data(UnbrokenTrials, [39]);
@@ -192,7 +192,7 @@ numNeurons=sum(imptUnits);
       data.ecodes.data(UnbrokenTrials, [7 9 10 12,13]),...
       numNeurons.*ones(sum(UnbrokenTrials), 1)
       ]);   
-  if ~isempty(data.spikes.data)
+  if ~isempty(data.spikes.data) && sum(find(imptUnits==1))>0
   spikies=[spikies;data.spikes.data(UnbrokenTrials,find(imptUnits==1))];
   else
       spikies=[spikies;cell(sum(UnbrokenTrials),1)];
@@ -208,7 +208,7 @@ for i=1:numNeurons
     spikelist=[spikelist,name];
 end
 if numNeurons==0
-    spikelist={'none'};
+    spikelist='none';
 end
 
 

@@ -1,4 +1,4 @@
-function [ z, NumTrialsLLR,binInd ] = FindHRateQuant(data,figgy,b)
+function [ z, NumTrialsLLR ] = FindHRateQuant(data,figgy,b,plotit,results_path)
 
 %Pick/parse actual data files
 % reparse=1;
@@ -16,6 +16,8 @@ STRENGTH=0;
 wantExcludeBegining=0;
 basedOnALLTrials=0;
 Cutoff=150;
+
+
 datahold.Sample_Angle(datahold.Sample_Angle>180)=datahold.Sample_Angle(datahold.Sample_Angle>180)-360;
 datahold{:,8}=round(datahold{:,8});
 datahold{:,16}=abs(datahold{:,8}).*sign(datahold{:,16});
@@ -25,7 +27,16 @@ LocationsForChange=unique(datahold{:,16});
 LocationsForChange=LocationsForChange(~isnan(LocationsForChange));
 EvidenceForChange=datahold{:,16};
 Evidence=datahold{:,8};
-LLConv= [log(1/54),log(2/54),log(3/54),log(10/30),log(20/20),log(30/10),log(54/3),log(54/2),log(54/1)]; %[-3.277    -1.3863         0   1.3863   3.277];%[-2.3026   -0.6931         0    0.6931    2.3026];
+
+LLConv= [log(1/54),log(1/54),log(1/54),log(1/3),log(1),log(3),log(54),log(54),log(54/1)]; %[-3.277    -1.3863         0   1.3863   3.277];%[-2.3026   -0.6931         0    0.6931    2.3026];
+
+if strncmp('Ci',data.Session{1},2) 
+    if str2double(data.Session{1}([9:10,12:13]))>916
+    LLConv= [log(1/54),log(1/3),log(1/2),log(2/3),log(1),log(1.5),log(2),log(3),log(54/1)]; %[-3.277    -1.3863         0   1.3863   3.277];%[-2.3026   -0.6931         0    0.6931    2.3026];
+    end
+    datahold.Sample_Angle(datahold.Sample_Angle<0)=datahold.Sample_Angle(datahold.Sample_Angle<0)+360;
+end
+%LLConv= [log(1/54),log(2/54),log(3/54),log(10/30),log(20/20),log(30/10),log(54/3),log(54/2),log(54/1)]; %[-3.277    -1.3863         0   1.3863   3.277];%[-2.3026   -0.6931         0    0.6931    2.3026];
 for i=1:length(LocationsForChange)
     EvidenceForChange(EvidenceForChange==LocationsForChange(i))=LLConv(i);
     Evidence(Evidence==Locations(i))=LLConv(i);
@@ -39,7 +50,7 @@ fileNAMES=unique(datahold{:,1});
 
 %General Settings:
 Hs=unique(datahold{:,3});%Hs=[.05,.5,.5,.9];
-
+Hs=Hs(Hs>.02);
 clear z; clear x; clear y;j=1;
 
 
@@ -71,13 +82,17 @@ end
 %%
 Session=1;
 firstj=j;
-for Hrate=1:length(unique(datahold.H_Rate))
+for Hrate=1:length(Hs)
     %
     pChange=[];
     
     
-    sessionBreakdown=strcmp(datahold{:,1},fileNAMES{Session});
+    sessionBreakdown=learningexclusion; %strcmp(datahold{:,1},fileNAMES{Session});
+    if length(fileNAMES)<2
     name=fileNAMES{Session};
+    else
+        name=['Aggregate of ', num2str(length(fileNAMES)), ' sessions'];
+    end
     
     
     %Parse when picked Targ 1 vs Targ 2 for fitting
@@ -106,7 +121,9 @@ for Hrate=1:length(unique(datahold.H_Rate))
     
     
     %Figure out how many trials you have to work with:
-    datahold2.Sample_Angle(datahold2.Sample_Angle>180)=datahold2.Sample_Angle(datahold2.Sample_Angle>180)-360;
+    if ~strncmp('Ci',data.Session{1},2)
+datahold2.Sample_Angle(datahold.Sample_Angle>180)=datahold2.Sample_Angle(datahold2.Sample_Angle>180)-360;
+end
     Locations=unique(round(datahold2.Sample_Angle,-1));
     
     
@@ -164,7 +181,6 @@ for Hrate=1:length(unique(datahold.H_Rate))
         
         for i=1:length(bins)
             pChange(i)=nanmean(Switch(strong_evidence_before(EFT2(strong_evidence_before)==bins(i))));
-            binInd{i} = strong_evidence_before(EFT2(strong_evidence_before)==bins(i));
             errbarholder(i)=bootstrapCurve( timesResample,Switch(strong_evidence_before(EFT2(strong_evidence_before)==bins(i))));
             
         end
@@ -182,22 +198,23 @@ for Hrate=1:length(unique(datahold.H_Rate))
         psychofit=1;
         if psychofit
             %Psychometric curve
+            if plotit
             figure(figgy) %(2*(Session-1)+1)
             %     title({['Model threshold=   ', num2str(x(Session,2))]})%['Actual H=', num2str(H), ' NoiseChoice = ' num2str(NoiseProb), ' lapse= ' num2str(lapse)],
             
             errorbar(bins,pChangetemp, errbartemp, colors{1+2*(Hrate-1)}, 'Linewidth', 3);
             hold on
-            
+            end
             
             yfit=@(x) x(1)+(1-2*x(1))./(1+exp((bins'-x(2)).*-x(3)));
             LogisticFit = @(x)nansum((pChangetemp-yfit(x)').^2);
-            x(Session,:,Hrate)=fmincon(LogisticFit,[0,.5,0],[],[],[],[],[0,-4,0],[.3,4,10]);
+            x(:,Hrate)=fmincon(LogisticFit,[0,.5,0],[],[],[],[],[0,-4,0],[.3,4,10]);
             %Showfit
-            tempper=x(Session,:,Hrate);
+            tempper=x(:,Hrate);
             
             showfitX=-4:.2:4;
             showfitY=tempper(1)+(1-2*tempper(1))./(1+exp((showfitX-tempper(2)).*-tempper(3)));
-            
+            if plotit
             plot(showfitX,showfitY,  colors{2+2*(Hrate-1)}, 'Linewidth', 2');
             xlabel('LLR For Change');
             ylabel('P(Switch)');
@@ -213,7 +230,7 @@ for Hrate=1:length(unique(datahold.H_Rate))
                 legend(['Data, H=', num2str(Hs(Hrate))],['Logistic Fit, H=' ,num2str(Hs(Hrate))], 'Data, H=.5', 'Logistic Fit, H=.5','location','northwest');
                 set(gca,'FontSize',14)
             end
-            
+            end
         end
         
         %% Fit Model based on the H rate that maximizes the probability that the actual choices were chosen, semi-conditionalized on whether the correct target was shown or not
@@ -247,39 +264,39 @@ for Hrate=1:length(unique(datahold.H_Rate))
     
     
 end
+if plotit
 figure(figgy)%(2*(Session-1)+1)
 if Hrate==2
-    title({['H=.05, Model Fit HRate=   ', num2str(z(1,1))],['H=.5, Model Fit HRate=   ', num2str(z(1,2))],[fileNAMES{Session}]},'Interpreter', 'none')%['Actual H=', num2str(H), ' NoiseChoice = ' num2str(NoiseProb), ' lapse= ' num2str(lapse)],
+    title({['H=.05, Model Fit HRate=   ', num2str(z(1,1))],['H=.5, Model Fit HRate=   ', num2str(z(1,2))],name},'Interpreter', 'none')%['Actual H=', num2str(H), ' NoiseChoice = ' num2str(NoiseProb), ' lapse= ' num2str(lapse)],
 else
-    title({['H=', num2str(Hs(Hrate)), ' Model Fit HRate=   ', num2str(z(1,1))],[fileNAMES{Session}]},'Interpreter', 'none')%['Actual H=', num2str(H), ' NoiseChoice = ' num2str(NoiseProb), ' lapse= ' num2str(lapse)],
+    title({['H=', num2str(Hs(Hrate)), ' Model Fit HRate=   ', num2str(z(1,1))],name},'Interpreter', 'none')%['Actual H=', num2str(H), ' NoiseChoice = ' num2str(NoiseProb), ' lapse= ' num2str(lapse)],
     
 end
-
  set(gcf, 'Units', 'Inches')
  set(gcf,'Position',[7.8000    1.9167    6.8583    6.2250]);
 pos=get(gcf, 'Position');
 set(gcf, 'PaperPositionMode', 'Auto','PaperUnits', 'Inches', 'PaperSize', [pos(3),pos(4)]);
+cd(results_path);
 saveas(gcf,[b,'_PsychometricFxn.pdf'])  
 
-
+end
 avgfits=nanmean(z,2);
 z;
 z=num2cell(z');
+x=num2cell(x');
+z=[z,x];
 NumTrialsLLR;
 NumTrialsLLR=num2cell(NumTrialsLLR);
 if length(Locations)==9
     if size(NumTrialsLLR,1)==2 && Hs<=.5
         NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'},'RowNames',{'T1_HL', 'T2_HL'});
-        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'},'RowNames',{'Low_H'});
+        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse', 'LogLaps','LogBias','LogSlope'},'RowNames',{'Low_H'});
     elseif size(NumTrialsLLR,1)==2 && Hs>.5
         NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'},'RowNames',{'T1_HH', 'T2_HH'});
-        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'},'RowNames',{'High_H'});
-    elseif size(NumTrialsLLR,1)>4
-        NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'});
-        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'});
+        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse','LogLaps','LogBias','LogSlope'},'RowNames',{'High_H'});
     else
         NumTrialsLLR=cell2table(NumTrialsLLR,'VariableNames',{'T2','T2_M','M2','T2_C','C','T1_C','M1', 'T1_M', 'T1'},'RowNames',{'T1_HL', 'T2_HL', 'T1_HH', 'T2_HH'});
-        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse'},'RowNames',{'Low_H','High_H'});
+        z=cell2table(z,'VariableNames',{'Fit_H','Fit_Noise','Fit_Lapse','LogLaps','LogBias','LogSlope'},'RowNames',{'Low_H','High_H'});
         
     end
 end
