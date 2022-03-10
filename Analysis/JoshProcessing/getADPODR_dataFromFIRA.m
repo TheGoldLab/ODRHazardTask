@@ -5,8 +5,10 @@ global FIRA
 
 % Get the file and put it in the global FIRA data struct so we can use 
 %   the FIRA utilities
+BoxLocal = 'C:/Users/alice'; %Alice PC
+FileLoc = '/Box/GoldLab/Data/Physiology/AODR/Converted';
 if nargin < 1 || isempty(fileName)    
-    fileName = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted/MM_2022_02_22_5_44-sort01-3units';
+    fileName = [BoxLocal FileLoc '/MM_2022_02_22_5_44-sort01-3units'];
 end
 [~, fn] = fileparts(fileName);
 openFIRA(fileName);

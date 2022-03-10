@@ -11,7 +11,7 @@ save_path = [BoxLocal SaveLoc];
 
 % data_path = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Sorted';
 % save_path = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted';
-file_in = fullfile(data_path, 'MM_2022_02_22_5_44-sort01-3units');
+file_in = fullfile(data_path, 'MM_2022_02_22_5_44-sort01-3units.plx'); %will try to connect to server if it can't find file, check ext
 file_out = fullfile(save_path, 'MM_2022_02_22_5_44-sort01-3units');
 % MM_2022_02_08_4_48-sort01-2units.plx
 
