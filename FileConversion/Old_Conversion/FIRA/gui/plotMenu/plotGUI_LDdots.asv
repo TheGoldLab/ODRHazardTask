@@ -1,0 +1,3477 @@
+function varargout = LDdots(varargin)
+% LDDOTS M-file for LDdots.fig
+%      
+% created by Long Ding 2-21-2007
+% 
+% Long Ding 2-22-2008 now SDF plot exclude data, only plot data from median
+% sac/dots onset
+% aligned on dotson: 100 presac
+% aligned on sacon:  200 post dots
+% 
+% LDDOTS, by itself, creates a new LDDOTS or raises the existing
+%      singleton*.
+%
+%      H = LDDOTS returns the handle to a new LDDOTS or the handle to
+%      the existing singleton*.
+%
+%      LDDOTS('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in LDDOTS.M with the given input arguments.
+%
+%      LDDOTS('Property','Value',...) creates a new LDDOTS or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before LDdots_OpeningFunction gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to LDdots_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Copyright 2002-2003 The MathWorks, Inc.
+
+% Edit the above text to modify the response to help LDdots
+
+% Last Modified by GUIDE v2.5 21-Apr-2009 10:08:36
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @LDdots_OpeningFcn, ...
+                   'gui_OutputFcn',  @LDdots_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before LDdots is made visible.
+function LDdots_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to LDdots (see VARARGIN)
+
+% Choose default command line output for LDdots
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes LDdots wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = LDdots_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
+
+
+% --------------------------------------------------------------------
+function mnuOpen_Callback(hObject, eventdata, handles)
+    clear global;
+    [fname, pathname] = uigetfile({'*.mat';'*.nex'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        len = length(fname);
+        postfix = fname(len-3:len);
+        switch postfix
+            case '.nex'
+                file_out = [pathname fname(1:len-3) 'mat'];
+                fdir = dir(file_out);
+                if ~isempty(fdir)
+                    button = questdlg([file_out ' exists, overwrite?']);
+                    if strcmp(button, 'No')
+                        [file_out, pathname] = uiputfile({'*.mat';'*.*'}, ...
+                            'Pick a file to save');
+                        if (file_out == 0)
+                            return
+                        else
+                            file_out = [pathname file_out];
+                        end
+                    elseif strcmp(button, 'Cancel')
+                        return
+                    end
+                end
+                bNex(fullname, 'spmLDdots', file_out, 'all', [15, 16], false, true);
+                load(file_out);
+                data.currentTrial = 1;
+                handles.data = data;
+                guidata(hObject, handles);
+            case '.mat'
+                load ([pathname fname]);
+                data.currentTrial = 1;
+                handles.data = data;
+                guidata(hObject,handles);
+            otherwise
+                disp('Wrong file extension or format');
+                return
+        end
+    end
+
+
+% --------------------------------------------------------------------
+function mnuFileSaveNoAnalog_Callback(hObject, eventdata, handles)
+    filein = handles.data.header.filename{1};
+    fileout = [filein(1:length(filein)-4) '_na.mat'];
+    fdir = dir(fileout);
+    if ~isempty(fdir)
+        button = questdlg([fileout ' exists, overwrite?']);
+        if strcmp(button, 'No')
+            [fileout, pathname] = uiputfile({'*.mat';'*.*'}, ...
+                'Pick a file to save');
+            if (fileout == 0)
+                return
+            else
+                fileout = [pathname fileout];
+            end
+        elseif strcmp(button, 'Cancel')
+            return
+        end
+    end
+    data = handles.data;
+    data.analog =[];
+    save(fileout, 'data');
+    
+% --------------------------------------------------------------------
+function mnuOpenEstimData_Callback(hObject, eventdata, handles)
+[fname, pathname] = uigetfile({'*.nex'}, ...
+    'Pick a file');
+if (fname~=0)
+    showFEFestimdata(fname);
+end
+    
+% --------------------------------------------------------------------
+function mnuDummyAnalysis_Callback(hObject, eventdata, handles)
+
+% --------------------------------------------------------------------
+function mnuDummyBehavior_Callback(hObject, eventdata, handles)
+
+
+
+% --------------------------------------------------------------------
+function mnuTrials_Callback(hObject, eventdata, handles)
+global alignID
+if ~isfield(handles, 'data') || isempty(handles.data)
+    msgbox('open a file first');
+    return
+end
+data = handles.data;
+filename = data.header.filename{1};
+k = findstr('\', filename);
+if ~isempty(k)
+    k = k(end);
+else
+    k=0;
+end
+filename = filename(k+1:end);
+set(handles.txtFileName,'string', filename);
+msg = 'File Info';
+msg = char(msg, ['spmF: ' func2str(data.header.spmF)]);
+msg = char(msg, ['Analog rate: ' num2str(data.analog.store_rate(1)) ', ' num2str(data.analog.store_rate(2)) ]);
+msg = char(msg, ['#Trials: ' num2str(data.header.numTrials)]);
+msg = char(msg, ['Date: ' data.header.date]);
+set(handles.txtFileInfo, 'String', msg);
+set(handles.slideTrialNo, 'Min', 1);
+set(handles.slideTrialNo, 'Max', data.header.numTrials);
+set(handles.slideTrialNo, 'SliderStep', [1, 10]/data.header.numTrials);
+set(handles.slideTrialNo, 'Value', 1);
+set(handles.edTrialIndex, 'string', '1');
+set(handles.edTaskID, 'string', '-1');
+set(handles.edTrialID, 'string', '-1');
+set(handles.edRewCont, 'string', '-1');
+set(handles.butShow, 'enable', 'on');
+set(handles.chkCorrect, 'value', 1);
+set(handles.listUnitID, 'String', num2cell(data.spikes.id));
+data.current = 1;
+handles.data = data;
+guidata(hObject, handles);
+alignID = 0;
+
+
+% --- Executes on slider movement.
+function slideTrialNo_Callback(hObject, eventdata, handles)
+% Incrementing slider value means incrementing the trial index number, i.e. 
+% the row number for the data.ecodes.data matrix. 
+% Changing slider overrides trial selection filters (taskID, trialID,
+% rewcont). 
+
+global alignID
+iTrial = int16( get(handles.slideTrialNo, 'value') );
+data = handles.data;
+
+if ~isnan(data.ecodes.data(iTrial, 1))
+    data.current = int16(iTrial);
+    handles.data = data;
+    guidata(hObject, handles);
+    set(handles.listTrialIndex, 'string', num2cell(data.current));
+    set(handles.listTrialIndex, 'value', 1);
+    set(handles.txtTrialInfo, 'String', [num2str(length(data.current)) ' Trials']);
+    set(handles.edTrialIndex, 'String', num2cell(data.current));
+    showTrials(handles, alignID);
+    listTrialIndex_Callback(hObject, eventdata, handles);
+%     msg = 'Trial Info';
+%     msg = char(msg, ['trialID ' num2str(handles.data.ecodes.data(iTrial,28))]);
+%     msg = char(msg, ['rewCont ' num2str(handles.data.ecodes.data(iTrial,29))]);
+%     msg = char(msg, ['T1_X ' num2str(handles.data.ecodes.data(iTrial,23))]);
+%     msg = char(msg, ['T1_Y ' num2str(handles.data.ecodes.data(iTrial,24))]);
+%     if ~isnan(handles.data.ecodes.data(iTrial,31))
+%         msg = char(msg, ['dots_dir ' num2str(handles.data.ecodes.data(iTrial,30))]);
+%         msg = char(msg, ['dots_coh ' num2str(handles.data.ecodes.data(iTrial,31))]);
+%     end
+%     msg = char(msg, ['offline score ' num2str(handles.data.ecodes.data(iTrial,34))]);
+%     set(handles.txtTrialShownInfo, 'String', msg);
+else
+    msgbox('bad trial: trial_num = NaN');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function slideTrialNo_CreateFcn(hObject, eventdata, handles)
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+function edTrialIndex_Callback(hObject, eventdata, handles)
+% editing thhis text box overrides all other trial selection method. Select trials based on
+% actual trial index, i.e. the row number for the data.ecodes.data matrix
+global alignID
+data = handles.data;
+txt=get(handles.edTrialIndex, 'string');
+if iscell(txt)
+    iTrials = parseComma(txt{1});
+elseif ischar(txt)
+    iTrials = parseComma(txt);
+end
+    
+if ~isempty(nonzeros(iTrials))
+    trialnum = data.ecodes.data(iTrials, 1);
+    iTrials = iTrials( find(~isnan(trialnum)) );
+    if ~isempty(iTrials)
+        data.current = int16(iTrials);
+        handles.data = data;
+        guidata(hObject, handles);
+        set(handles.listTrialIndex, 'string', num2cell(data.current));
+        set(handles.listTrialIndex, 'value', 1);
+        set(handles.txtTrialInfo, 'String', [num2str(length(data.current)) ' Trials']);
+        showTrials(handles, alignID);
+        set(handles.slideTrialNo, 'value', iTrials(1));
+    else
+        msgbox('no good trial selected');
+    end
+else
+    msgbox('wrong inputs');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edTrialIndex_CreateFcn(hObject, eventdata, handles)
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on button press in chkTaskID.
+function chkTaskID_Callback(hObject, eventdata, handles)
+% hObject    handle to chkTaskID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkTaskID
+
+
+
+function edTaskID_Callback(hObject, eventdata, handles)
+% hObject    handle to edTaskID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edTaskID as text
+%        str2double(get(hObject,'String')) returns contents of edTaskID as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edTaskID_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edTaskID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in chkTrialID.
+function chkTrialID_Callback(hObject, eventdata, handles)
+% hObject    handle to chkTrialID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkTrialID
+
+
+
+function edTrialID_Callback(hObject, eventdata, handles)
+% hObject    handle to edTrialID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edTrialID as text
+%        str2double(get(hObject,'String')) returns contents of edTrialID as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edTrialID_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edTrialID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function edRewCont_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edRewCont (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+% --- Executes on button press in butShow.
+function butShow_Callback(hObject, eventdata, handles)
+global alignID
+data = handles.data;
+trialindex = [];
+% select trials according to filters
+filterTaskID = [];
+filterTrialID = [];
+filterRewCont = [];
+filterscore = [];
+if get(handles.chkTaskID, 'value')
+    filterTaskID = parseComma(get(handles.edTaskID, 'string')) ;
+end
+if get(handles.chkTrialID, 'value')
+    filterTrialID = parseComma(get(handles.edTrialID, 'string')) ;
+end
+if get(handles.chkRewCont, 'value')
+    filterRewCont = parseComma(get(handles.edRewCont, 'string')) ;
+end
+
+if get(handles.chkCorrect, 'value')
+    filterscore = [filterscore 1];
+end
+if get(handles.chkError, 'value')
+    filterscore = [filterscore 0];
+end
+if get(handles.chkNCerr, 'value')
+    filterscore = [filterscore -1];
+end
+if get(handles.chkBrFix, 'value')
+    filterscore = [filterscore -2];
+end
+
+colTaskID = find(strcmp('taskid', data.ecodes.name),1);
+colTrialID = find(strcmp('trialid', data.ecodes.name),1);
+colRewCont = find(strcmp('rewcont', data.ecodes.name),1);
+colTrialNum = find(strcmp('trial_num', data.ecodes.name),1);
+colScore = find(strcmp('correct', data.ecodes.name),1);
+
+trialnum = data.ecodes.data(:,colTrialNum);
+trialindex = find(~isnan(trialnum));
+pointer_All = ones(size(trialindex));
+
+if ~isempty(filterTaskID) 
+    n = length(filterTaskID);
+    pointer = zeros(size(trialindex));
+    for i=1:n
+        k = find(data.ecodes.data(trialindex,colTaskID) == filterTaskID(i));
+        pointer(k) = 1;
+    end
+    pointer_All = pointer_All.*pointer;
+end
+
+if ~isempty(filterTrialID) 
+    n = length(filterTrialID);
+    pointer = zeros(size(trialindex));
+    for i=1:n
+        k = find(data.ecodes.data(trialindex,colTrialID) == filterTrialID(i));
+        pointer(k) = 1;
+    end
+    pointer_All = pointer_All.*pointer;
+end
+    
+if ~isempty(filterRewCont) 
+    n = length(filterRewCont);
+    pointer = zeros(size(trialindex));
+    for i=1:n
+        k = find(data.ecodes.data(trialindex,colRewCont) == filterRewCont(i));
+        pointer(k) = 1;
+    end
+    pointer_All = pointer_All.*pointer;
+end
+
+% figure out if to include correct/error trials
+if ~isempty(filterscore)
+    n = length(filterscore);
+    pointer = zeros(size(trialindex));
+    for i=1:n
+        k = find(data.ecodes.data(trialindex,colScore) == filterscore(i));
+        pointer(k) = 1;
+    end
+    pointer_All = pointer_All.*pointer;
+end
+trialindex = trialindex.*pointer_All;
+trialindex = nonzeros(trialindex);
+if isempty(trialindex)
+    msgbox('no trial selected');
+    return
+end
+data.current = int16(trialindex);
+
+handles.data = data;
+guidata(hObject, handles);
+
+set(handles.listTrialIndex, 'string', num2cell(data.current));
+set(handles.txtTrialInfo, 'String', [num2str(length(data.current)) ' Trials']);
+showTrials(handles, alignID);
+
+% --------------------------------------------------------------------
+function butGrpAlign_SelectionChangeFcn(hObject, eventdata, handles)
+global alignID
+switch get(hObject,'Tag')   % Get Tag of selected object
+    case 'butTgtOn'
+        alignID = 1;
+    case 'butGO'
+        alignID = 2;
+    case 'butSacOn'
+        alignID = 3;
+    case 'butEyeInFix'
+        alignID = 4;
+    case 'butSacOnOffline'
+        alignID = 5;
+    case 'butRewOn'
+        alignID = 6;
+    case 'butFeedback'
+        alignID = 7;
+    case 'butReturnSac'
+        alignID = 8;
+    otherwise
+        alignID = 0;
+end
+
+% --- Executes on selection change in listTrialIndex.
+function listTrialIndex_Callback(hObject, eventdata, handles)
+listValues = get(handles.listTrialIndex, 'String');
+i = get(handles.listTrialIndex, 'value');
+iTrial = str2num(listValues{i});
+msg = 'Trial Info';
+msg = char(msg, ['trialID ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('trialid', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['rewCont ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('rewcont', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['T1_X ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('t1_x', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['T1_Y ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('t1_y', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['lat ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('sac_lat', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['endx ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('sac_endx', handles.data.ecodes.name),1)))]);
+msg = char(msg, ['endy ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('sac_endy', handles.data.ecodes.name),1)))]);
+if ~isnan(handles.data.ecodes.data(iTrial,find(strcmp('dot_coh', handles.data.ecodes.name),1)))
+    msg = char(msg, ['dots_dir ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('dot_dir', handles.data.ecodes.name),1)))]);
+    msg = char(msg, ['dots_coh ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('dot_coh', handles.data.ecodes.name),1)))]);
+end
+msg = char(msg, ['offline score ' num2str(handles.data.ecodes.data(iTrial,find(strcmp('OLscore', handles.data.ecodes.name),1)))]);
+set(handles.txtTrialShownInfo, 'String', msg);
+
+% Hints: contents = get(hObject,'String') returns listTrialIndex contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listTrialIndex
+
+
+% --- Executes during object creation, after setting all properties.
+function listTrialIndex_CreateFcn(hObject, eventdata, handles)
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+% --------------------------------------------------------------------
+function mnuDummySettings_Callback(hObject, eventdata, handles)
+% hObject    handle to mnuDummySettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function mnuSettingTimeAxis_Callback(hObject, eventdata, handles)
+    set(gcf,'CurrentAxes',handles.axEyeX);
+    temp = axis;
+    dlg_title = 'Set time axis';
+    prompt = {'current setting'};
+    def = {[num2str(temp(1)) ', ' num2str(temp(2))]};
+    a = inputdlg(prompt, dlg_title, 1, def);
+    if isempty(a)
+        return
+    else
+        t = parseComma(a{1});
+        if length(t)==2 && t(2)>t(1)
+            xlim(t);
+            set(gcf,'CurrentAxes',handles.axEyeY);
+            xlim(t);
+            set(gcf,'CurrentAxes',handles.axSpikes);
+            xlim(t);
+        else
+            msgbox('Invalid inputs');
+        end
+    end
+
+
+% --------------------------------------------------------------------
+function mnuBehRTLearning_Callback(hObject, eventdata, handles)
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+
+    colCorrect = find(strcmp('correct', data.ecodes.name),1);
+    colSacRT = find(strcmp('sac_lat', data.ecodes.name),1);
+    colCoh = find(strcmp('dot_coh', data.ecodes.name),1);
+    colDir = find(strcmp('dot_dir', data.ecodes.name),1);
+    colChoice = find(strcmp('choice', data.ecodes.name),1);
+
+    allrt = data.ecodes.data(:,colSacRT);
+    correct = data.ecodes.data(:,colCorrect);
+    choice = data.ecodes.data(:,colChoice);
+    coh = data.ecodes.data(:,colCoh);
+    dotdir = data.ecodes.data(:,colDir);
+    cohs = unique(coh);
+    cohs = sort(cohs(~isnan(cohs)));
+    dirs = unique(dotdir);
+    dirs = sort(dirs(~isnan(dirs)));
+    plotcol = length(dirs);
+    plotrow = length(cohs);
+%     figTimecourse = figure;
+%     k = 1;
+%     for i=1:plotrow
+%         for j=1:plotcol
+%             indexCorrect = find((correct == 1 & coh == cohs(i) & dotdir == dirs(j)) );
+%             numCorrect = length(indexCorrect);
+%             indexError = find((correct == 0 & coh == cohs(i) & dotdir == dirs(j)) );
+%             numError = length(indexError);
+%             percentCorrect(i,j) = numCorrect/( numCorrect + numError ) * 100;
+%             subplot(plotrow,plotcol,k);
+%             hold on;
+%             plot(indexCorrect, allrt(indexCorrect), 'bo');
+%             plot(indexError, allrt(indexError), 'ro');
+%             title(['coh=' num2str(cohs(i)) '  dir=' num2str(dirs(j)) ' %correct ' num2str(percentCorrect(i,j))]);
+%             k= k + 1;
+% % 
+% %             x(k) = (cohs(i)*(-1)^(j-1))/100;
+% %             if x(k)>=0
+% %                 pC(k) = percentCorrect(i,j)/100;
+% %             else
+% %                 pC(k) = 1 - percentCorrect(i,j)/100;
+% %             end
+% %             num(k) = numError+numCorrect;
+% %             rtC{k} = allrt(indexCorrect);
+% %             k=k+1;
+%         end
+%     end
+%     finalaxis = [0 length(allrt) 200 600];
+%     for i=1:k-1
+%         subplot(plotrow,plotcol, i);
+%         axis(finalaxis);
+%     end
+%     suptitle(fname);
+    
+    figMetric = figure;
+
+%     prepare for psychometric function, categorized by L-R, for
+%     chronometric function, correct trials only
+    k = 1;
+    for i=1:plotrow
+        for j=1:plotcol
+            indexR{i,j} = find((choice == 1 & coh == cohs(i) & dotdir == dirs(j)) );
+            indexL{i,j} = find((choice == 2 & coh == cohs(i) & dotdir == dirs(j)) );
+            if ~isempty(indexR{i,j}) || ~isempty(indexL{i,j})
+                x(k) = (cohs(i)*(-1)^(j-1))/100;
+                numR = length(indexR{i,j});
+                numL = length(indexL{i,j});
+                num(k) = numR + numL;
+                percentR(k) = numR/num(k);
+                indexC = find( coh == cohs(i) & dotdir == dirs(j) & correct == 1 );
+                indexE = find( coh == cohs(i) & dotdir == dirs(j) & correct == 0 );
+                rtC{k} = allrt(indexC);
+                rtE{k} = allrt(indexE);
+                k=k+1;
+            end
+        end
+    end
+    
+    % plot psychometric function
+    subplot(2,2,1);
+    hold on;
+    plot(x,percentR,'r.', 'markersize',15);
+
+%     % prepare data for ctPsych_fit of pschometric function
+%     %     [f,ci] = ctPsych_fit(@quick4, data, pdat)
+%     % separate data into two halves. flip one. 
+%     ix = find(x>0);
+%     data1 = x(ix)';
+%     pdat = [percentR(ix); num(ix)]';
+%     [f1,ci_,stats_,percentRfit1,resids_] = ctPsych_fit(@quick4, data1, pdat);
+%     msg = char(['RIGHT: alpha ' num2str(f1(1)) ' beta ' num2str(f1(2)) ' lamda ' num2str(f1(3)) ' gamma ' num2str(f1(4))]);
+%     
+%     ix = find(x < 0);
+%     data2 = abs(x(ix))';
+%     pdat = [1-percentR(ix); num(ix)]';
+%     [f2,ci_,stats_,percentRfit2,resids_] = ctPsych_fit(@quick4, data1, pdat);
+%     msg = char(msg, ['LEFT: alpha ' num2str(f2(1)) ' beta ' num2str(f2(2)) ' lamda ' num2str(f2(3)) ' gamma ' num2str(f2(4)) ]);
+%     plot(data1(:,1), percentRfit1, '-');
+%     plot(-data1(:,1), 1-percentRfit2, '-');
+    plot([0 0], [0 1],'k--');
+    plot([-1 1], [0.5 0.5],'k--');
+    xlim([-0.6 0.6]);
+    xlabel('coh');
+    ylabel('pRight');
+    
+    % prepare data for 
+    % function [fits_,pred_] = Hanks2006ls_fit(data)    
+    data = [x; percentR; num]';
+    [fits_, pred] = Hanks2006ls_fit(data);
+%     [newx,ix] = sort(x);
+%     newp = pred(ix);
+%     plot(newx, newp, 'g-');
+    newx = [-1:0.01:1];
+    newp = logistHanksNN2006Fig2_val(newx, fits_);
+    plot(newx,newp, 'g-');
+%     plot([-1 1],[0.82 0.82],'--');
+%     plot([-1 1],[0.18 0.18],'--');
+    c = logistHanksThresholdCalc(0.82, fits_);
+    plot(c, 0 , 'b.', 'MarkerSize', 16);
+    c = logistHanksThresholdCalc(0.18, fits_);
+    plot(c, 0 , 'b.', 'MarkerSize', 16);
+    set(gca, 'xtick', [-0.6:0.1:0.6]);
+    msg = char(['HANKS eq1: ' num2str(fits_(1)) ', ' num2str(fits_(2)) ', ' num2str(fits_(3)) ]);
+    title(msg);
+    %     text(-0.55, 0.75, msg);    
+
+    % plot chronometric function
+    subplot(2,2,2);
+    hold on;
+    for i=1:length(x)
+        rtCmedian(i) = median(rtC{i});
+        rtCmean(i) = mean(rtC{i});
+        rtCErrBar(i,:) = prctile(rtC{i}, [20 80])-rtCmedian(i);
+        if length(rtE{i})>3
+            rtEmean(i) = mean(rtE{i});
+        else
+            rtEmean(i) = 0;
+        end
+    end
+    xlim([-0.6 0.6]);
+    xlabel('coh');
+    ylabel('RT (ms)');
+    errorbar(x,rtCmedian, rtCErrBar(:,1), rtCErrBar(:,2), 'r.', 'markersize', 15);
+    plot(x, rtCmean, 'bx', 'markersize', 15);
+    plot(x, rtEmean, 'ko', 'markersize', 10);
+    grid on;
+    title('x-correct mean, o - error mean, 20-80prctile');
+    
+%     plot rt on reciprobit scales, grouped by direction and coherence
+%     level
+    for i=1:length(x)
+        rt2plot = rtC{i};
+        [k,m] = size(rt2plot);
+        cumh=[];
+        for j=1:k
+            t = find(rt2plot<=rt2plot(j));
+            [n,m] = size(t);
+            cumh(j) = n/k;
+        end
+        yprobit = norminv(cumh,0,1)';
+        if x(i)<0
+            subplot(2,2,3); hold on;
+            flagcolor = 0;
+        else
+            subplot(2,2,4); hold on;
+            flagcolor = 1;
+        end
+        h_probit(i) = plot(1./rt2plot, yprobit, '.', 'MarkerSize',10, 'color', cohcolor(abs(x(i))*100, flagcolor));
+        % prepare data for regression
+        temp = find( (yprobit<2)&(yprobit>-2) );
+        xrt = rt2plot(temp)';
+        yrt = yprobit(temp)';
+%           xrt = rt2plot(~isinf(yprobit))'; yrt = yprobit(~isinf(yprobit))';
+        % remove the smallest 10%
+        %                newx = sort(x);
+        %                [nx,mx] = size(newx);
+        %                mx = max(1,floor(nx*0.1));
+        %                threshold = newx(mx);
+        %                temp = find(x>threshold);
+
+        xrt = 1./xrt;% (temp);
+        %y = y(temp);
+        prt = polyfit(xrt,yrt,1);
+        fitx = [min(xrt) max(xrt)];
+        fity = prt(1)*fitx+prt(2);
+        plot(fitx,fity,'-', 'LineWidth',2,'color', cohcolor(abs(x(i))*100, flagcolor));
+    end
+
+%         transform axis
+    xrtrange = prctile(allrt, [5 95]);
+    xrtrange(1) = xrtrange(1)-mod(xrtrange(1),100);
+    xrtrange(2) = xrtrange(2)-mod(xrtrange(2),100)+100;    
+    for i=3:4
+        subplot(2,2,i); hold on;
+        ytickset = [0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95];
+        yticksetInv = norminv(ytickset, 0, 1);
+        ylim([min(yticksetInv), max(yticksetInv)]);
+        set(gca,'YTick', yticksetInv);
+        yticksetLabel = num2str(ytickset'*100);
+        set(gca, 'YTickLabel', yticksetLabel);
+        xtickset = [xrtrange(1):ceil((xrtrange(2)-xrtrange(1))/500)*100:xrtrange(2)];
+        set(gca,'XDir','reverse');
+        xticksetRecip = sort(1./xtickset);
+        xlim([min(xticksetRecip) max(xticksetRecip)]);
+        set(gca,'XTick',xticksetRecip);
+        xticksetRev = -sort(-xtickset);
+        xticksetLabel = num2str(xticksetRev');
+        set(gca, 'XTickLabel', xticksetLabel);
+        xlabel('Latency (ms)');
+        ylabel('cumh');
+    end
+    suptitle(fname);
+
+    % --------------------------------------------------------------------
+function mnuBatchPsychometric_Callback(hObject, eventdata, handles)
+
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, 'Pick files', 'MultiSelect', 'on');
+    if ~iscell(fname) && ~ischar(fname)
+        return
+    elseif ischar(fname)
+        %         single file selected
+        [fits, pred, datatofit] = FIRA_dotsRTPsychSigmoidFit([pathname fname]);
+        figure;
+        hold on;
+        x = datatofit(:,1);
+        pct = datatofit(:,2);
+        [newx,ix] = sort(x);
+        newp = pred(ix);
+        plot(newx, pct(ix), 'r.', 'MarkerSize', 5);
+        plot(newx, newp, 'g-');
+        msg = char(['HANKS eq1: ' num2str(fits(1)) ', ' num2str(fits(2)) ', ' num2str(fits(3)) ]);
+        text(-0.95, 0.75, msg);
+        xlim([-1 1]);
+        ylim([0, 1]);
+        title(fname);
+    else
+        %         multiple file selected
+        paraname = {'Bias', 'Slope', 'Lapse'};
+        nFile = length(fname);
+        fname = sort(fname);
+        groupfit = []; grouppred = [];
+        for i=1:nFile
+            [fits, pred, datatofit] = FIRA_dotsRTPsychSigmoidFit([pathname fname{i}]);
+            groupfit = [groupfit; fits];
+            grouppred = [grouppred, pred];
+        end
+        figBatch = figure;
+        for i=1:3
+            subplot(3,3,(i-1)*3+1);
+            plot(groupfit(:,i), '.', 'MarkerSize', 5);
+            title(paraname{i});
+        end
+        subplot(3,3,[2,3,5,6,8,9]);
+        hold on;
+        c = datatofit(:,1);
+        [newc, ic] = sort(c);
+        plot(newc, grouppred(ic,:));
+        plot([-1 1],[0.82 0.82], 'k--');
+        plot([-1 1],[0.18 0.18], 'k--');
+        plot([-1 1],[0.5 0.5], 'k-.');
+        plot([0 0],[0 1], 'k-.');
+        grid on;
+        legend(fname, 'Location', 'Northwest');
+    end
+
+% --------------------------------------------------------------------
+function mnuRTvsITI_Callback(hObject, eventdata, handles)
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+    col_fpon = find(strcmp('trial_wrt', data.ecodes.name),1);
+    colSacRT = find(strcmp('sac_lat', data.ecodes.name),1);
+    colCoh = find(strcmp('dot_coh', data.ecodes.name),1);
+    colDir = find(strcmp('dot_dir', data.ecodes.name),1);
+    col_tgton = find(strcmp('tgt_on', data.ecodes.name),1);
+    col_doton = find(strcmp('dot_on', data.ecodes.name),1);
+    
+    fpon = [0; data.ecodes.data(:,col_fpon)];
+    allrt = data.ecodes.data(:,colSacRT);
+    dotcoh = data.ecodes.data(:,colCoh);
+    dotdir = data.ecodes.data(:,colDir);
+    tgton = data.ecodes.data(:,col_tgton);
+    doton = data.ecodes.data(:,col_doton);
+    
+    iti = diff(fpon);
+    waitT = doton - tgton;
+    cohs = unique(dotcoh);
+    cohs = sort(cohs(~isnan(cohs)));
+    ncohs = length(cohs);
+    dirs = unique(dotdir);
+    dirs = sort(dirs(~isnan(dirs)));
+    ndirs = length(dirs);
+    
+    for idir = 1:ndirs
+        figure;
+        for icoh = 1:ncohs
+            subplot(3,3,icoh);
+            hold on;
+            ix = find(dotcoh == cohs(icoh) & dotdir == dirs(idir));
+            if ~isempty(ix)
+                tbin = [0:150:1500];
+                nbin = hist(waitT(ix), tbin);
+                [ax, h1, h2] = plotyy(waitT(ix), allrt(ix), tbin, nbin , 'plot','line');
+                set(h1, 'LineStyle', 'none', 'MarkerSize', 7 , 'Marker','.');
+                set(h2, 'LineWidth', 1);
+                set(ax(1), 'XLim', [0 1500], 'YLim', [0 1000], 'YTick', [0:200:1000]);
+                set(ax(2), 'XLim', [0 1500], 'YLim', [0 100], 'XTickLabel','', 'XTick',[], 'YTick', [0:20:100]);
+            end
+        end
+        subplot(3,3,9);
+        set(gca, 'visible','off');
+        suptitle(['RT~WaitTime   dir = ' num2str(dirs(idir))]);
+    end
+    
+    for idir = 1:ndirs
+        figure;
+        for icoh = 1:ncohs
+            subplot(3,3,icoh);
+            hold on;
+            ix = find(dotcoh == cohs(icoh) & dotdir == dirs(idir));
+            if ~isempty(ix)
+                plot(iti(ix), allrt(ix), 'b.', 'MarkerSize', 7);
+                ylim([0 1000]);
+                xlim([0 15000]);
+            end
+        end
+        suptitle(['RT~ITI   dir = ' num2str(dirs(idir))]);
+    end
+
+
+% --------------------------------------------------------------------
+function mnuRTSingleSessionRunning_Callback(hObject, eventdata, handles)
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+
+    a = inputdlg({'Window size (# of good trials)', 'step size'}, '' , 1, {'200', '50'});
+    if ~isempty(a)
+        trialPerBin = str2num(a{1});
+        stepBin = str2num(a{2});
+    end
+    colCorrect = find(strcmp('correct', data.ecodes.name),1);
+    colSacRT = find(strcmp('sac_lat', data.ecodes.name),1);
+    colCoh = find(strcmp('dot_coh', data.ecodes.name),1);
+    colDir = find(strcmp('dot_dir', data.ecodes.name),1);
+    colChoice = find(strcmp('choice', data.ecodes.name),1);
+    
+    choice = data.ecodes.data(:,colChoice);
+    kGood = find(choice>=0);
+    choice = choice(kGood);
+    allrt = data.ecodes.data(kGood,colSacRT);
+    correct = data.ecodes.data(kGood,colCorrect);
+    coh = data.ecodes.data(kGood,colCoh);
+    dotdir = data.ecodes.data(kGood,colDir);
+    cohs = unique(coh);
+    cohs = sort(cohs(~isnan(cohs)));
+    dirs = unique(dotdir);
+    dirs = sort(dirs(~isnan(dirs)));
+    plotcol = length(dirs);
+    plotrow = length(cohs);
+    totalTrial = length(allrt);
+    comb = [-cohs(plotrow:-1:1) cohs];
+    comb = sort(unique(comb));
+    iBin = 1; startBin = 1; endBin = startBin + trialPerBin;
+    fits = []; pRs = []; xBin = []; rtCmedian =[]; rtCmean = [];
+    while endBin<totalTrial
+        allrt_bin = allrt(startBin:endBin);
+        correct_bin = correct(startBin:endBin);
+        choice_bin = choice(startBin:endBin);
+        coh_bin = coh(startBin:endBin);
+        dotdir_bin = dotdir(startBin:endBin);
+        k = 1; x = []; indexR = []; indexL = []; num =[]; percentR = []; indexC = []; rtC = []; fit = [];
+        for i=1:plotrow
+            for j=1:plotcol
+                indexR{i,j} = find((choice_bin == 1 & coh_bin == cohs(i) & dotdir_bin == dirs(j)) );
+                indexL{i,j} = find((choice_bin == 2 & coh_bin == cohs(i) & dotdir_bin == dirs(j)) );
+                if ~isempty(indexR{i,j}) || ~isempty(indexL{i,j})
+                    x(k) = (cohs(i)*(-1)^(j-1));
+                    numR = length(indexR{i,j});
+                    numL = length(indexL{i,j});
+                    num(k) = numR + numL;
+                    percentR(k) = numR/num(k);
+                    indexC = find( coh_bin == cohs(i) & dotdir_bin == dirs(j) & correct_bin == 1 );
+                    rtC{k} = allrt_bin(indexC);
+                    k=k+1;
+                end
+            end
+        end
+        data = [x/100; percentR; num]';
+        [fit, pred] = Hanks2006ls_fit(data);
+        fits = [fits; fit];
+        for i=1:length(comb)
+            j = find(x==comb(i));
+            if ~isempty(j)
+                pRs(i,iBin) = percentR(j);
+                rtCmedian(i, iBin) = median(rtC{j});
+                rtCmean(i, iBin) = mean(rtC{j});
+            else
+                rtCmedian(i, iBin) = 0;
+                rtCmean(i, iBin) = 0;
+                pRs(i, iBin) = -1;
+            end
+        end
+        xBin = [xBin startBin];
+        startBin = startBin + stepBin;
+        endBin = endBin + stepBin;
+        if endBin+stepBin>=totalTrial
+            endBin = totalTrial;
+        end
+        iBin = iBin + 1;
+    end
+    figTimecourseP = figure;
+    paraname = {'Bias', 'Slope', 'Lapse'};
+    for i=1: length(comb)
+        if comb(i)<=0
+            colorset{i} = cohcolor(abs(comb(i)), 0);
+        else
+            colorset{i} = cohcolor(abs(comb(i)), 1);
+        end
+    end
+    for i=1:3
+        subplot(2,3,i);
+        plot(xBin,fits(:,i),'b.', 'markerSize',6);
+        if i==3
+            ylim([-1 1]);
+        end
+        xlim([0 max(xBin)]);
+        title(paraname{i});
+    end
+    subplot(2,3,[4:6]);
+    hold on;
+    for i=1: length(comb)
+        plot(xBin , pRs(i,:),'o-', 'color', colorset{i});
+    end
+    xlim([0 max(xBin)]);
+    legend(num2str(comb), 'Location', 'NorthEast');
+    title('percent Right');
+
+    figTimecourseT = figure;
+    subplot(2,2,2);
+    hold on;
+    for i=1:length(comb)
+        if comb(i)>=0
+            plot(xBin, rtCmedian(i,:), 'o-', 'color', colorset{i});
+        end
+    end
+    xlim([0 max(xBin)]);
+%     legend(num2str(comb), 'Location', 'NorthEast');
+    title('Median');
+    
+    subplot(2,2,4);
+    hold on;
+    for i=1:length(comb)
+        if comb(i)>=0
+            plot(xBin, rtCmean(i,:), 'o-', 'color', colorset{i});
+        end
+    end
+    xlim([0 max(xBin)]);
+    %     legend(num2str(comb), 'Location', 'NorthEast');
+    title('Mean');
+
+    subplot(2,2,1);
+    hold on;
+    for i=1:length(comb)
+        if comb(i)<=0
+            plot(xBin, rtCmedian(i,:), 'o-', 'color', colorset{i});
+        end
+    end
+    xlim([0 max(xBin)]);
+%     legend(num2str(comb), 'Location', 'NorthEast');
+    title('Median');
+
+    subplot(2,2,3);
+    hold on;
+    for i=1:length(comb)
+        if comb(i)<=0
+            plot(xBin, rtCmean(i,:), 'o-', 'color', colorset{i});
+        end
+    end
+    xlim([0 max(xBin)]);
+%     legend(num2str(comb), 'Location', 'NorthEast');
+    title('Mean');
+    
+    suptitle(fname);
+
+
+
+% --------------------------------------------------------------------
+function mnuPsychRTfits_Callback(hObject, eventdata, handles)
+
+    % 12-9-08, modified to separately analyze different rew contingencies,
+    % LD
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+    
+    
+    colCorrect = find(strcmp('correct', data.ecodes.name),1);
+    colSacRT = find(strcmp('sac_lat', data.ecodes.name),1);
+    colCoh = find(strcmp('dot_coh', data.ecodes.name),1);
+    colDir = find(strcmp('dot_dir', data.ecodes.name),1);
+    colChoice = find(strcmp('choice', data.ecodes.name),1);
+    colRewcont = find(strcmp('rewcont',  data.ecodes.name),1);
+    
+    allrt = data.ecodes.data(:,colSacRT);
+    correct = data.ecodes.data(:,colCorrect);
+    choice = data.ecodes.data(:,colChoice);
+    coh = data.ecodes.data(:,colCoh);
+    dotdir = data.ecodes.data(:,colDir);
+    cohs = unique(coh);
+    cohs = sort(cohs(~isnan(cohs)));
+    dirs = unique(dotdir);
+    dirs = sort(dirs(~isnan(dirs)),'ascend');
+    if dirs(1)>90
+        dirs = sort(dirs(~isnan(dirs)),'descend');
+    end
+    i_dots = ~isnan(coh);
+    rewcont = data.ecodes.data(:,colRewcont);
+%     rewconts = unique(rewcont(i_dots));
+    rewconts = [0 1 2];
+    n_rewcont = length(rewconts);
+    n_trials = size(data.ecodes.data, 1);
+    
+    figMetric = zeros(n_rewcont,1);
+    plotcol = length(dirs);
+    plotrow = length(cohs);
+    rewcont_txt = {'R-Small, L-Large CYAN', 'R-Large, L-Small MAGENTA', 'Equal'};
+    rewcont_marker = {'c.','m.', 'r.'};
+    rewcont_lines = {'c--','m-', 'g-'};
+    figure;
+    msg = '';
+    for i_rewcont = 1:n_rewcont
+        indRew = logical(rewcont==rewconts(i_rewcont));
+        if sum(indRew)==0
+            continue;
+        end
+%         figMetric(i_rewcont) = figure;
+
+        %     prepare for psychometric function, categorized by L-R, for
+        %     chronometric function, correct trials only
+        indR = logical(choice==1);        
+        indL = logical(choice==2);
+        indDotR = logical(dotdir == dirs(1));
+        indDotL = logical(dotdir == dirs(2));
+        indCorrect = logical(correct == 1);
+        ind_coh = zeros(n_trials, plotrow);
+        for i=1:plotrow
+            ind_coh(:, i) = logical(coh==cohs(i)) & indRew;
+        end
+        x = sort(unique([-cohs cohs])); % choice 1 => Right ==> positive coh
+        nx = length(x);
+        num = zeros(size(x));
+        numR = zeros(size(x));
+        for i=1:nx
+            if x(i)>0
+                temp = indDotR & ind_coh(:, find(cohs==x(i)));
+            elseif x(i)==0
+                temp = ind_coh(:,find(cohs==0));
+            else
+                temp = indDotL & ind_coh(:, find(cohs==abs(x(i))));
+            end
+            tempR = temp & indR ;
+            tempL = temp & indL ;
+            num(i) = sum(tempR)+ sum(tempL);
+            numR(i) = sum(tempR);
+        end
+        datap = [x/100 numR num];
+        
+%--------------------------------------------
+% old way to preparing psychometric function
+%     k = 1;
+%     for i=1:plotrow
+%         for j=1:plotcol
+%             indexR{i,j} = find((choice == 1 & coh == cohs(i) & dotdir == dirs(j)) );
+%             indexL{i,j} = find((choice == 2 & coh == cohs(i) & dotdir == dirs(j)) );
+%             if ~isempty(indexR{i,j}) || ~isempty(indexL{i,j})
+%                 x(k) = (cohs(i)*(-1)^(j-1))/100;
+%                 numR(k) = length(indexR{i,j});
+%                 numL(k) = length(indexL{i,j});
+%                 num(k) = numR(k) + numL(k);
+%                 percentR(k) = numR(k)/num(k);
+% %                 indexC = find( coh == cohs(i) & dotdir == dirs(j) & correct == 1 );
+% %                 indexE = find( coh == cohs(i) & dotdir == dirs(j) & correct == 0 );
+% %                 rtC{k} = allrt(indexC);
+% %                 rtE{k} = allrt(indexE);
+%                 k=k+1;
+%             end
+%         end
+%     end
+%     datap1 = [x;numR;num]';
+%     datap1 = [x numR num];
+ %--------------------------------------------   
+        % plot psychometric function
+        h(1) = subplot(3,2,1);
+        hold on;
+        percentR = numR./num;
+        plot(x/100,percentR,rewcont_marker{i_rewcont}, 'markersize',15);
+        plot([-0.6 0.6],[0.5 0.5], '--');
+        plot([0 0],[0 1], '--');
+        xlim([-0.6 0.6]);
+        ylabel('pRight'); xlabel('coh');
+
+        %   prepare for chronometric function. 
+        %   special case for coh=0; x=1000 for choice1, -1000 for choice2
+        coh_nonzero = cohs(cohs>0);
+        n_coh_nonzero = length(coh_nonzero);
+       if ~isempty(find(cohs==0))
+            x = [-sort(coh_nonzero', 'descend') -100000 100000 coh_nonzero'];
+        else
+            x = [-sort(coh_nonzero', 'descend') coh_nonzero'];
+       end
+        nx = length(x);
+        meanrt = zeros(size(x)); varrt = meanrt; numrt = meanrt;
+        mean_err_rt = meanrt; var_err_rt = meanrt; num_err_rt = meanrt;
+        rtC = cell(nx,1); rtE = rtC;
+        for i=1:nx
+            if x(i) == -100000
+                i_coh = logical(cohs == 0);
+                temp = ind_coh(:,i_coh) & indL;
+                temp_err = [];
+            elseif x(i) == 100000
+                i_coh = logical(cohs == 0);
+                temp = ind_coh(:,i_coh) & indR;
+                temp_err = [];
+            elseif x(i)<0
+                i_coh = logical(cohs == -x(i));
+                temp = ind_coh(:,i_coh) & indDotL & indCorrect & indL;
+                temp_err = ind_coh(:,i_coh) & indDotL & ~indCorrect & indR ;
+            else
+                i_coh = logical(cohs == x(i));
+                temp = ind_coh(:,i_coh) & indDotR & indCorrect & indR;
+                temp_err = ind_coh(:,i_coh) & indDotR & ~indCorrect & indL;
+            end
+            rtC{i} = allrt(temp);
+            meanrt(i) = mean(rtC{i});
+            varrt(i) = var(rtC{i});
+            numrt(i) = sum(temp);
+            rtE{i} = allrt(temp_err);
+            mean_err_rt(i) = mean(rtE{i});
+            var_err_rt(i) = var(rtE{i});
+            num_err_rt(i) = sum(temp_err);
+        end
+        x = x/100;
+        datart = [x; meanrt; varrt; numrt]';
+        
+%--------------------------------------------
+% old way to preparing chronometric function
+%         k = 1; x=[];
+%         for i=1:plotrow
+%             if cohs(i)==0
+%                 x(k) = 1000;
+%                 indexC{k} = find( coh == 0 & choice == 1 );
+%                 indexE{k} = find( coh == 0 & choice == 2 );
+%                 k=k+1;
+%                 x(k) = -1000;
+%                 indexC{k} = find( coh == 0 & choice == 2 );
+%                 indexE{k} = find( coh == 0 & choice == 1 );
+%                 k=k+1;
+%             else
+%                 x(k) = cohs(i)/100;
+%                 indexC{k} = find( coh == cohs(i) & dotdir == dirs(1) & correct == 1 );
+%                 indexE{k} = find( coh == cohs(i) & dotdir == dirs(1) & correct == 0 );
+%                 k=k+1;
+%                 x(k) = -cohs(i)/100;
+%                 indexC{k} = find( coh == cohs(i) & dotdir == dirs(2) & correct == 1 );
+%                 indexE{k} = find( coh == cohs(i) & dotdir == dirs(2) & correct == 0 );
+%                 k=k+1;
+%             end
+%         end
+%         for i=1:k-1
+%             rtC{i} = allrt(indexC{i});
+%             meanrt(i) = mean(rtC{i});
+%             medianrt(i) = median(rtC{i});
+%             varrt(i) = var(rtC{i});
+%             numrt(i) = length(indexC{i});
+%             rtE{i} = allrt(indexE{i});
+%             if length(rtE{i})>3
+%                 mean_err_rt(i) = mean(rtE{i});
+%             else
+%                 mean_err_rt(i) = 0;
+%             end
+%         end
+%         xfordata = x;
+% %         datart1 = [xfordata;meanrt;varrt;numrt]';
+%         datart1 = [x; meanrt; varrt; numrt]';
+%--------------------------------------------
+
+        i = find(abs(x)>1);
+        if ~isempty(i)
+            x(i) = 0;
+        end
+        % plot chronometric function
+        h(2) = subplot(3,2,2);
+        hold on;
+        xlim([-0.6 0.6]);
+        xlabel('coh');
+        ylabel('RT (ms)');
+        plot(x, meanrt, rewcont_marker{i_rewcont}, 'markersize', 15);
+%         plot(x, mean_err_rt, 'bo', 'markersize', 10);
+        legend('correct','error');
+        grid on;
+        axis_simu = axis;
+%         h = dotsRT_plotBehavior([datap(:,1) datap(:,2)./datap(:,3)], datart(:,1:2), 'b.', h);
+
+        %     plot rt on reciprobit scales, grouped by direction and coherence
+        %     level
+        iNeg = find(x<0);
+        xNeg = x(iNeg);
+        subplot(3,2,3);
+        hold on;
+        for i=1:length(xNeg)
+            rt2plot = rtC{iNeg(i)};
+            if ~isempty(rt2plot)
+                [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, 0, 0);
+                plot(xrt, yrt, '.','MarkerSize',10, 'color', cohcolor(abs(xNeg(i))*100, 0));
+                plot(fitx,fity,'-', 'LineWidth',2,'color', cohcolor(abs(xNeg(i))*100, 0));
+            end
+        end
+        [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, gca, [0 2500]);
+
+        subplot(3,2,5);
+        hold on;
+        for i=1:length(xNeg)
+            rt2plot = rtE{iNeg(i)};
+            if ~isempty(rt2plot)
+                [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, 0, 0);
+                plot(xrt, yrt, '.','MarkerSize',10, 'color', cohcolor(abs(xNeg(i))*100, 0));
+                plot(fitx,fity,'-', 'LineWidth',2,'color', cohcolor(abs(xNeg(i))*100, 0));
+            end
+        end
+        [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, gca, [0 2500]);
+
+        iPos = find(x>0);
+        xPos = x(iPos);
+        subplot(3,2,4);
+        hold on;
+        for i=1:length(xNeg)
+            rt2plot = rtC{iPos(i)};
+            if ~isempty(rt2plot)
+                [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, 0);
+                plot(xrt, yrt, '.','MarkerSize',10, 'color', cohcolor(abs(xPos(i))*100, 1));
+                plot(fitx,fity,'-', 'LineWidth',2,'color', cohcolor(abs(xPos(i))*100, 1));
+            end
+        end
+        [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, gca, [0 2500]);
+
+        subplot(3,2,6);
+        hold on;
+        for i=1:length(xNeg)
+            rt2plot = rtE{iPos(i)};
+            if ~isempty(rt2plot)
+                [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, 0);
+                plot(xrt, yrt, '.','MarkerSize',10, 'color', cohcolor(abs(xPos(i))*100, 1));
+                plot(fitx,fity,'-', 'LineWidth',2,'color', cohcolor(abs(xPos(i))*100, 1));
+            end
+        end
+        [xrt, yrt, fitx, fity, prt] = probit_later(rt2plot, gca, [0 2500]);
+
+        % fit psychometric and chronometric functions simultaneously
+
+        % remove zero coherence data, not used for fits
+        %     temp = find(datap(:,1)~=0);
+        %     datap = datap(temp,:);
+        %     temp = find(abs(datart(:,1))~=1000);
+        %     datart = datart(temp,:);
+
+        fits = dotsRTfit(datap, datart);
+        %     determine threshold of fitted psychometric function
+        [x,ix] =sort(datap(:,1));
+        pA_th = 0.82;
+        plot([-1 1], [pA_th pA_th], '--', 'color', [0.5 0.5 0.5]);
+        [th, fval, exitflag] = fzero(@(x)pAThreshold_asymDDM(x, fits, pA_th), 0.0001);
+        plot([th th], [0 fval+pA_th], 'b.', 'MarkerSize', 5, 'LineStyle','--');
+
+        %     plot fitted curves
+        xfit_p = [-512:2:512]/1000;
+        minC = min(abs(x(x~=0)));
+        maxC = max(abs(x));
+        xfit_rt = [-maxC:0.002:-minC -1000 1000 minC:0.002:maxC];
+        [pR, rt] = dotsRTfit_val(xfit_p, xfit_rt, fits);
+        %     [pR, rt] = dotsRTfit_val(datap(:,1), datart(:,1), fits);
+        subplot(3,2,1);
+        hold on;
+        plot(xfit_p, pR, rewcont_lines{i_rewcont}, 'linewidth',2);
+
+        axis_RT = subplot(3,2,2);
+        %     x = datart(:,1);
+        i = find(xfit_rt<0);
+        xneg = xfit_rt(i); rtneg = rt(i);
+        i = find(xneg==-1000);
+        if ~isempty(i)
+            xneg(i) = 0;
+        end
+        %     [xneg, ix] = sort(xneg);
+        plot(xneg, rtneg, rewcont_lines{i_rewcont}, 'linewidth',2);
+
+        i = find(xfit_rt>0);
+        xpos = xfit_rt(i); rtpos = rt(i);
+        i = find(xpos==1000);
+        if ~isempty(i)
+            xpos(i) = 0;
+        end
+        %     [xpos, ix] = sort(xpos);
+        plot(xpos, rtpos, rewcont_lines{i_rewcont}, 'linewidth',2);
+        msg_temp = [fname ' ' rewcont_txt{rewconts(i_rewcont)+1} '    threshold ' num2str(th)];
+        msg = char(msg, msg_temp);
+        msg = char(msg, num2str(fits));
+        dlmwrite('fitsout.txt', msg_temp, '-append', 'delimiter','');
+%         dlmwrite('fitsout.txt', msg_temp, '-append');
+        dlmwrite('fitsout.txt', fits, '-append');
+    end
+  suptitle(msg);
+    
+% %% verify with Tim Hanks' codes
+%     [fitsTim, errTim, data2fit, fit_flags] = fitDiffModHanks(fullname, axis_RT); 
+%     fitsTim_Long = [fitsTim(2) fitsTim(3) fitsTim(1)*100 fitsTim(4) fitsTim(5)]
+%     disp(['Error using Tim"s fit Tim"s err function ', num2str(errTim)]);
+%     theta = [fits(3)/100 fits(1) fits(2) fits(4) fits(5)];
+%     err = fitDiffMod(theta, data2fit, fit_flags);
+%     disp(['Error using Long"s fit Tim"s err function ', num2str(err)]);
+%     err = dotsRTfit_err(fits, datap, datart);
+%     disp(['Error using Long"s fit Long"s err function ', num2str(err)]);
+%     err = dotsRTfit_err(fitsTim_Long, datap, datart);
+%     disp(['Error using Tim"s fit Long"s err function ', num2str(err)]);
+%     
+    
+    
+    %     simuDDM(fits);
+%     subplot(3,2,2);
+%     axis(axis_simu);
+
+
+% --------------------------------------------------------------------
+function mnuNeural_Callback(hObject, eventdata, handles)
+% hObject    handle to mnuNeural (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function mnuSDF_MGS_Callback(hObject, eventdata, handles)
+global FIRA
+% data = handles.data;
+data 
+filename = data.header.filename{1};
+k = findstr('\', filename);
+k = k(end);
+filename = filename(k+1:end);
+sigma = 20;
+dlg_title = 'SDF-MGS Settings';
+prompt = {'UnitID', 'align to tgton', 'align to sac on', 'align to rew on', 'time range tgton', 'time range sac on', 'time range rew on'};
+def = {'all','1', '1', '1', '-500: 1500', '-500:500', '-500:500'};
+a = inputdlg(prompt, dlg_title, 1, def);
+if isempty(a)
+    disp('settings: wrong inputs');
+    return
+end
+if findstr(a{1},'all')
+    allunits = 1;
+else
+    allunits = 0;
+    unitID = str2num(a{1});
+end
+% parse time ranges
+timerange = [];
+for i=5:7
+    timerange = [timerange; parseSymbol(a{i},':')];
+end
+mgsvgs = 1; % MGS
+% mgsvgs = 2; % VGS
+colTaskID = find(strcmp('taskid', data.ecodes.name),1);
+taskid = data.ecodes.data(:, colTaskID);
+trials = find(taskid == mgsvgs); 
+if isempty(trials)
+    disp('no data from MGS task');
+    return;
+end
+
+% get condition ecodes
+conditions_list = {'trialid', 't1_angle', 'correct', 'reward', 'taskid'};
+nConditions = length(conditions_list);
+conditions = [];
+for i = 1:nConditions
+    col = find(strcmp(conditions_list{i}, data.ecodes.name),1);
+    conditions = [conditions; data.ecodes.data(:,col)'];
+end
+
+non_nanItems = find(~isnan(conditions(2,:)));
+conditions = conditions(:,non_nanItems)';
+% get alignment times
+align_list = {'tgt_on', 'fp_off', 'sac_on_offline','rew_on'};
+nAlign = length(align_list);
+alignTimes = [];
+for i = 1:nAlign
+    col = find(strcmp(align_list{i}, data.ecodes.name),1);
+    alignTimes = [alignTimes; data.ecodes.data(:,col)'];
+end
+alignTimes = alignTimes';
+
+% trials = find(taskid == 1 & ~isnan(alignTimes(:,1)));
+% nTrials = length(trials);
+
+nUnits = length(data.spikes.id);
+angleList = [135, 1, 4; 90, 2, 5; 45, 3, 6; 180, 7, 10; 0, 9, 12; 225, 13, 16; 270, 14, 17; 315, 15,18];
+t1_angles = unique(conditions(:,2));
+n_angles = length(t1_angles);
+
+for iUnit = 1:nUnits
+    if allunits==1 || data.spikes.id(iUnit) == unitID
+        for i=1:3
+            if str2num(a{i+1})
+                figMGS(i) = figure;
+            end
+        end
+        rasteraxis = []; axisLim = [];
+        for i_angle = 1:n_angles
+            i_axes = find(angleList(:,1)==t1_angles(i_angle));
+            if ~isempty(i_axes)
+                axes_index = angleList(i_axes, 2);
+                trials_included = find(conditions(:,2)==t1_angles(i_angle) & conditions(:,3) >=0 & conditions(:,5)==mgsvgs);
+                if str2num(a{2})
+                    figure(figMGS(1));
+                    panel_tgton(i_angle)= subplot(6,3, angleList(i_axes, 2));
+                    sacon{i_angle} = alignTimes(trials_included, 3) - alignTimes(trials_included, 1);
+                    raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), ...
+                        sacon{i_angle}, 1, timerange(1,1), timerange(1,2), panel_tgton(i_angle), '', 0);
+                    if ~isempty(raster_temp)
+                        [tBin, SDF] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(1,1), timerange(1,2), sigma);
+                        subplot(6,3, angleList(i_axes, 3)); hold on;
+                        plot(tBin, SDF, '-');
+                        xlim([timerange(1,1), timerange(1,2)]);
+                        axisLim = [axisLim; axis];
+                    end
+                end
+                if str2num(a{3})
+                    figure(figMGS(2));
+                    panel_sacon(i_angle)= subplot(6,3, axes_index);
+                    fpoff{i_angle} = alignTimes(trials_included, 2) - alignTimes(trials_included, 3);
+                    raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                        fpoff{i_angle}, 1, timerange(2,1), timerange(2,2), panel_sacon(i_angle), '', 0);
+                    if ~isempty(raster_temp)
+                        [tBin, SDF] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(2,1), timerange(2,2), sigma);
+                        subplot(6,3, angleList(i_axes, 3)); hold on;
+                        plot(tBin, SDF, '-');
+                        xlim([timerange(2,1), timerange(2,2)]);
+                        axisLim = [axisLim; axis];
+                    end
+                end
+                if str2num(a{4})
+                    figure(figMGS(3));
+                    panel_rewon(i_angle)= subplot(6,3, axes_index);
+                    sacon{i_angle} = alignTimes(trials_included, 3) - alignTimes(trials_included, 4);
+                    raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+                        sacon{i_angle}, 1, timerange(3,1), timerange(3,2), panel_rewon(i_angle), '', 0);
+                    if ~isempty(raster_temp)
+                        [tBin, SDF] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(3,1), timerange(3,2), sigma);
+                        subplot(6,3, angleList(i_axes, 3)); hold on;
+                        plot(tBin, SDF, '-');
+                        xlim([timerange(3,1), timerange(3,2)]);
+                        axisLim = [axisLim; axis];
+                    end
+                end
+            else
+                disp([num2str(t1_angles(i_angle)) 'is not a preset angle']);
+            end
+        end
+        ymax = max(axisLim(:,4));
+        for i=1:3
+            if str2num(a{i+1})
+                figure(figMGS(i));
+                for i_angle = 1:n_angles
+                    subplot(6,3, angleList(i_angle, 3));
+                    ylim([0 ymax]);
+                end
+                str = [filename '  Unit ' num2str(data.spikes.id(iUnit)) ' MGS ' prompt{i+1}];
+                suplabel(str,'t');
+                set(gcf,    'PaperOrientation', 'landscape', ...
+                    'PaperPositionMode', 'manual', ...
+                    'PaperUnits', 'inches', ...
+                    'PaperPosition', [0.25 0.44 10.5 7.61]);
+            end
+        end
+    end
+end
+
+
+% intended to be a universal SDF plotter. Not finished. 
+% data = handles.data;
+% n = length(data.current);
+% currentid = data.current; 
+% colTaskID = find(strcmp('taskid', data.ecodes.name),1);
+% taskid = data.ecodes.data(currentid, colTaskID);
+% taskids = sort(unique(taskid)); ntaskids = length(taskids);
+% colTrialID = find(strcmp('trialid', data.ecodes.name),1);
+% trialid = data.ecodes.data(currentid, colTrialID);
+% colTgt1 = find(strcmp('t1_angle', data.ecodes.name),1);
+% tgt1 = data.ecodes.data(currentid, colTgt1);
+% colCoh = find(strcmp('dot_coh', data.ecodes.name),1);
+% dotCoh = data.ecodes.data(currentid, colCoh);
+% colDir = find(strcmp('dot_dir', data.ecodes.name),1);
+% dotDir = data.ecodes.data(currentid, colDir);
+% colChoice = find(strcmp('choice', data.ecodes.name),1);
+% monkChoice = data.ecodes.data(currentid, colChoice);
+% 
+% switch alignID
+%     case 1
+%         colAlign = find(strcmp('tgt_on', data.ecodes.name),1)*ones(1,n);
+%     case 2
+%         for i=1:n
+%             switch taskid(i)
+%                 case {1,4}
+%                     colAlign(i) = find(strcmp('fp_off', data.ecodes.name),1);
+%                 case 2
+%                     colAlign(i) = find(strcmp('tgt_on', data.ecodes.name),1);
+%                 case 3
+%                     colAlign(i) = find(strcmp('dot_on', data.ecodes.name),1);
+%                 otherwise
+%                     colAlign(i) = find(strcmp('fp_off', data.ecodes.name),1);;
+%             end
+%         end
+%     case 3
+%         colAlign = find(strcmp('sac_on', data.ecodes.name),1)*ones(1,n);
+%     case 4
+%         colAlign = find(strcmp('eyefix', data.ecodes.name),1)*ones(1,n);
+%     case 5
+%         colAlign = find(strcmp('sac_on_offline', data.ecodes.name),1)*ones(1,n);
+%     case 6
+%         colAlign = find(strcmp('rew_on', data.ecodes.name),1)*ones(1,n);
+%     otherwise
+%         colAlign = find(strcmp('fp_on', data.ecodes.name),1)*ones(1,n);
+% end
+% 
+% for i=1:n
+%     tshift = data.ecodes.data(currentid(i), colAlign(i)) - data.analog.data(currentid(i), 1).start_time;
+%     
+% end
+% 
+% 
+% colorid = ones(1,n);
+% % Depending on taskID, sort trials to be displayed in different colors
+% for i=1:ntaskids
+%     temp = find(taskid == taskids(i));
+%     trialid_temp = data.ecodes.data(temp, colTrialID);
+%     trialids_temp = sort(unique(trialid_temp));   
+%     n_trialids_temp = length(trialids_temp);
+%     switch taskids(i)
+%         case {1,2}:
+%             for i_trialid = 1:n_trialids_temp
+%                 temp = find(trialid == trialids_temp(i_trialid));
+%                 colorid(temp) = i_trialid;
+%             end
+%         case {3,4}:
+%             for i_trialid = 1:n_trialids_temp
+%                 temp = find(trialid == trialids_temp(i_trialid));
+%                 colorid(temp) = i_trialid;
+%             end
+%     end
+% end
+%     trialids = sort(unique(trialid));   ntrialids = length(trialids);
+%     for i_trialid = 1:ntrialids
+%         
+%     end
+% for i=1:n
+%     switch taskid(i)
+%         case 1: % vgs
+%         case 2: % mgs
+%         case 3: % dots RT
+%         case 4: % reg dots    
+%     end
+% end
+% 
+% 
+% 
+% for i=1:n
+%     tshift = data.ecodes.data(currentid(i), colAlign(i)) - data.analog.data(currentid(i), 1).start_time;
+%     if ~isnan(tshift) && ~isinf(tshift)
+%         nshiftx = fix(tshift /1000 * acqRate(1));
+%         nshifty = fix(tshift /1000 * acqRate(2));
+%         for j=1:data.analog.data(currentid(i),1).length
+%             k = j-nshiftx+maxlenx;
+%             if k<maxlenx*2
+%                 defx(k,i) = data.analog.data(currentid(i),1).values(j);
+%                 defy(k,i) = data.analog.data(currentid(i),2).values(j);
+%             end
+%         end
+%         x = defx(:,i); y = defy(:,i);
+%         align_startx(i) = find(x+1000, 1,'first')+1;
+%         align_endx(i) = find(x+1000, 1,'last')-1;
+%         align_starty(i) = find(y+1000, 1,'first')+1;
+%         align_endy(i) = find(y+1000, 1,'last')-1;
+%     else    % the trial doesn't have the event to align to
+%         align_startx(i) = maxlenx ; align_endx(i) = -maxlenx;
+%         align_starty(i) = maxleny ; align_endy(i) = -maxleny;
+%         colorid(i) = 0; % to hide later 
+%     end
+% end
+
+
+% --------------------------------------------------------------------
+function mnuSDFdotsRT_Callback(hObject, eventdata, handles)
+% intended to plot Roitman+Shadlen style figures, just for dotsRT task
+% tgt on --- dots on (coh x direction) 
+% --- sac on (coh x sac direction x correct )
+
+data = handles.data;
+
+dlg_title = 'SDF-dotsRT Settings';
+prompt = {  'UnitID', ...
+            'Trials to include (Error -1, All 0, Correct 1)', ...
+            'Gaussian kernel sigma', ...
+            'trials to exclude by #', ...
+            'time range tgton', ...
+            'time range dots on', ...
+            'time range sac on', ...
+            'time range rew on', ...
+            'timebin for predictive index', ...
+            'slidestep for predictive index', ...
+            'rt percentile to include', ...
+            'reward contingency'};
+def = {'2001','1', '20', '', '-500:1000', '-500:1000', '-500:1000','-500:1000', '200', '20', '50', '2'};
+a = inputdlg(prompt, dlg_title, 1, def);
+if isempty(a)
+    disp('settings: wrong inputs');
+    return
+end
+if findstr(a{1},'all')
+    allunits = 1;
+else
+    allunits = 0;
+    unitID = str2num(a{1});
+end
+
+flag = str2num(a{2});
+sigma = str2num(a{3});
+if isempty(a{4})
+    trialBounds = [];
+else
+    trialBounds = parseSymbol(a{4},'-');
+end
+flagtxt = {'Error', 'All', 'Correct'};
+
+% flag = 0;       % 0: all trials, 1: correct only, -1: error only
+% sigma = 20;     % sigma for SDF gaussian kernel
+
+% parse time ranges
+timerange = [];
+for i=5:8
+    timerange = [timerange; parseSymbol(a{i},':')];
+end
+
+timebin = str2num(a{9});
+slidestep = str2num(a{10});
+rt_percentile = str2num(a{11});
+
+filename = data.header.filename{1};
+k = findstr('\', filename);
+if ~isempty(k)
+    k = k(end);
+else
+    k=0;
+end
+
+filename = filename(k+1:end);
+
+colTaskID = find(strcmp('taskid', data.ecodes.name),1);
+taskid = data.ecodes.data(:, colTaskID);
+trials = find(taskid == 3);
+if isempty(trials)
+    disp('no data from dotsRT task');
+    return;
+end
+
+  
+    
+% get condition ecodes
+% use offline results
+conditions_list = {'trialid', 't1_angle', 'dot_coh', 'dot_dir', 'choice', 'correct', 'reward', 'taskid', 'rewcont'};
+% use REX results
+conditions_list = {'trialid', 't1_angle', 'dot_coh', 'dot_dir', 'choice', 'OLscore', 'reward', 'taskid', 'rewcont'};
+
+nConditions = length(conditions_list);
+conditions = [];
+for i = 1:nConditions
+    col = find(strcmp(conditions_list{i}, data.ecodes.name),1);
+    conditions = [conditions; data.ecodes.data(:,col)'];
+end
+
+% remove trials with reward contingencies not specified in menu
+i_exclude = logical(conditions(9,:) ~= str2num(a{12}));
+conditions(3, i_exclude) = NaN;
+conditions(8, i_exclude) = NaN; 
+% remove trials with nan as dots coherence
+i_exclude = logical(isnan(conditions(3,:)));
+
+% non_nanItems = find(~isnan(conditions(3,:)));
+
+conditions1 = conditions(:,~i_exclude)';
+conditions = conditions';
+dot_coh_unique = sort(unique(conditions1(:,3)));
+if isempty(dot_coh_unique)
+    disp ('no matching reward contingency ');
+    return
+end
+
+% %%%%%%  making figures for only a subset of coherence 
+% figureflag = 1;
+% dot_coh_unique = [32 128 512]/10;
+% %%%%%%
+
+n_dotcoh = length(dot_coh_unique);
+dot_dir_unique = sort(unique(conditions1(:,4)));
+n_dotdir = length(dot_dir_unique);
+if n_dotdir>2
+    dlg_title = '!!! more than 2 dot directions';
+    dotdir_txt = '';
+    for i=1:n_dotdir
+        dotdir_txt = [dotdir_txt ' ' num2str(dot_dir_unique(i))];
+    end
+    prompt = {['angle1 to use ' dotdir_txt],['angle2 to use ' dotdir_txt]};
+    temp = inputdlg(prompt, dlg_title, 1, {'0', '180'});
+    if ~isempty(temp)
+        dot_dir_unique = [str2num(temp{1}), str2num(temp{2})];
+        n_dotdir = 2;
+    else
+        disp('no angle selected');
+        return;
+    end
+end
+temp = min(dot_dir_unique);
+if temp<=90
+    t_rightup = temp;
+    t_leftdown = mod(temp+180, 360);
+else
+    t_rightup = mod(temp+180, 360);
+    t_leftdown = temp;
+end
+t1_angles = unique(conditions1(:,2));
+dot_dir_unique = [t_rightup t_leftdown]
+sacdir = -ones(size(conditions(:,5)));
+temp = find(conditions(:,5)==1);
+sacdir(temp) = t_rightup;
+temp = find(conditions(:,5)==2);
+sacdir(temp) = t_leftdown;
+sacdir_unique = [t_rightup t_leftdown];
+n_sacdir = 2;
+plotrows = n_dotcoh*n_dotdir;
+plotcols = 5;
+
+% get alignment times
+% use offline behavioral measures
+align_list = {'tgt_on', 'dot_on', 'sac_on_offline','rew_on', 'fdbkon', 'targoff', 'omitrew'};
+% use online ecodes
+align_list = {'tgt_on', 'dot_on', 'sac_on','rew_on', 'fdbkon', 'targoff', 'omitrew'};
+
+nAlign = length(align_list);
+alignTimes = [];
+for i = 1:nAlign
+    col = find(strcmp(align_list{i}, data.ecodes.name),1);
+    alignTimes = [alignTimes; data.ecodes.data(:,col)'];
+end
+% alignTimes = alignTimes(:,non_nanItems)';
+alignTimes = alignTimes';
+
+% trials = find(taskid == 3 & ~isnan(alignTimes(:,2)));
+% nTrials = length(trials);
+
+
+nUnits = length(data.spikes.id);
+for iUnit = 1:nUnits
+    if allunits==1 || data.spikes.id(iUnit) == unitID
+        figUnit(iUnit).raster = figure;
+
+        %   panel 1     align data on targets onset, no need to separate trials, marker
+        %               shows dots onset, sdf only for the shortest foreperiod,
+        %               sorted by dots onset
+        panel_tgton = subplot(plotrows,plotcols,[1:plotcols:plotrows*plotcols]);
+        raster_tgt = []; marker = [];
+        trials_included = find(conditions(:,6)>-2 & conditions(:,8)==3);
+        if ~isempty(trialBounds)
+            trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+%             trials_excluded = trials_included(trials_included>=trialBounds(1) & trials_included <= trialBounds(2));
+%             conditions(trials_excluded, 3) = -1000;
+        end
+        dotson = alignTimes(trials_included,2) - alignTimes(trials_included,1);
+        raster_tgt = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), dotson, 1, timerange(1,1), timerange(1,2), panel_tgton, 'Target on', 0);
+%         raster_tgt = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), dotson, 1, timerange(1,1), timerange(1,2), '', 'Target on', 0);
+
+        %   panel 2     align data on dots on, separate by dots coherence and direction, markers show sac onset
+        %               sorted by sac onset
+        rasteraxis = [];
+        for i_coh = 1:n_dotcoh
+            for i_dir = 1:n_dotdir
+                i_temp = i_coh+(i_dir-1)*n_dotcoh;
+                if dot_coh_unique(i_coh) == 0   % collaspe all coh =0 trials
+                    trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & conditions(:,8)==3);
+                else
+                    switch flag
+                        case 0     %             include all finished trials
+                            trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & conditions(:,4)==dot_dir_unique(i_dir) & conditions(:,8)==3);
+                        case 1     %             include only correct trials
+                            trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & conditions(:,4)==dot_dir_unique(i_dir) & conditions(:,6)==1 & conditions(:,8)==3);
+                        case -1    %             include only wrong choice trials
+                            trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & conditions(:,4)==dot_dir_unique(i_dir) & conditions(:,6)==0 & conditions(:,8)==3);
+                    end
+                end
+                if ~isempty(trialBounds)
+                    trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                end
+                sacon_dot{i_coh, i_dir} = alignTimes(trials_included, 3) - alignTimes(trials_included, 2);
+                rewon_dot{i_coh, i_dir} = alignTimes(trials_included, 4) - alignTimes(trials_included, 2);
+                panel_dotson(i_temp) = subplot(plotrows,plotcols,2+(i_temp-1)*plotcols);
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+                    [sacon_dot{i_coh, i_dir} rewon_dot{i_coh, i_dir}], 1, timerange(2,1), timerange(2,2), panel_dotson(i_temp), ...
+                    ['DOTS ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+%                 raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+%                     [sacon_dot{i_coh, i_dir} rewon_dot{i_coh, i_dir}], 1, timerange(2,1), timerange(2,2), '', ...
+%                     ['DOTS ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+                raster_doton{i_coh, i_dir} = raster_temp;
+                rasteraxis = [rasteraxis; axis(panel_dotson(i_temp))];
+            end
+        end
+
+%         n_panel = length(panel_dotson);
+%         for i_panel = 1:n_panel
+%             axes(panel_dotson(i_panel));
+%             ylim([0 max(rasteraxis(:,4))]);
+%         end
+                
+
+        %   panel 3     align data on sac on, separate by dots coherence and choice direction, markers show dots onset
+        %               sorted by dots onset
+        %   panel 4     align data on feedback, separate by dots coherence
+        %   and choice direction, markers show sac onset and reward onset
+        %               sorted by rew onset
+        for i_coh = 1:n_dotcoh
+            for i_dir = 1:n_sacdir
+                i_temp = i_coh + (i_dir-1)*n_dotcoh;
+                switch flag
+                    case 0     %             include all finished trials
+                        trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir)  & conditions(:,8)==3);
+                    case 1     %             include only correct trials
+                        trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & conditions(:,6)==1 & conditions(:,8)==3);
+                    case -1     %             include only error trials
+                        trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & conditions(:,6)==0 & conditions(:,8)==3);
+                end
+                if ~isempty(trialBounds)
+                    trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                end
+                dotson_sac{i_coh, i_dir} = alignTimes(trials_included,2) - alignTimes(trials_included,3);
+                panel_sacon(i_temp) = subplot(plotrows, plotcols, 3+(i_temp-1)*plotcols);
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                    dotson_sac{i_coh, i_dir}, 1, timerange(3,1), timerange(3,2), panel_sacon(i_temp), ...
+                    ['SAC ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+%                 raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+%                     dotson_sac{i_coh, i_dir}, 1, timerange(3,1), timerange(3,2), '', ...
+%                     ['SAC ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+                raster_sacon{i_coh, i_dir} = raster_temp;
+
+                panel_fdbkon(i_temp) = subplot(plotrows, plotcols, 4+(i_temp-1)*plotcols);
+                sacon_fdbkon{i_coh, i_dir} = alignTimes(trials_included,3) - alignTimes(trials_included,6);
+                rewon_fdbkon{i_coh, i_dir}  = alignTimes(trials_included,4) - alignTimes(trials_included,6);
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,6), ...
+                    [rewon_fdbkon{i_coh, i_dir} sacon_fdbkon{i_coh, i_dir}], 1, timerange(3,1), timerange(3,2), panel_fdbkon(i_temp), ...
+                    ['FEEDBAK ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+                raster_fdbkon{i_coh, i_dir} = raster_temp;
+%                 ylim([0 max(rasteraxis(:,4))]);
+            end
+        end
+
+        %   panel 5     align data on rew on, separate by dots coherence and choice direction, markers show sac onset
+        %               sorted by reward onset
+        %               starting 9-16-08, file may contain correct trials with reward omitted. 
+        if flag>=0     % include only correct trials
+            for i_coh = 1:n_dotcoh
+                for i_dir = 1:n_sacdir
+                    i_temp = i_coh + (i_dir-1)*n_dotcoh;
+                    panel_rewon(i_temp) = subplot(plotrows, plotcols, 5+(i_temp-1)*plotcols); hold on;
+                    if dot_coh_unique(i_coh) == 51.2
+                        trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & conditions(:,6) == 1 & isnan(conditions(:,7)) & conditions(:,8)==3);
+                        if ~isempty(trialBounds)
+                            trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                        end
+                        sacon_omitrew{i_coh, i_dir} = alignTimes(trials_included,3) - alignTimes(trials_included,7);
+                        raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,7), ...
+                            sacon_omitrew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), panel_rewon(i_temp), ...
+                            ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 1 );
+                        %                     raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+                        %                         sacon_rew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), '', ...
+                        %                         ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+                        raster_omitrew{i_coh, i_dir} = raster_temp;
+                    end
+                    
+                    trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & ~isnan(conditions(:,7)) & conditions(:,8)==3);
+                    if ~isempty(trialBounds)
+                        trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                    end
+                    sacon_rew{i_coh, i_dir} = alignTimes(trials_included,3) - alignTimes(trials_included,4);
+                    raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+                        sacon_rew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), panel_rewon(i_temp), ...
+                        ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+%                     raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+%                         sacon_rew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), '', ...
+%                         ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+                    raster_rewon{i_coh, i_dir} = raster_temp;
+%                     ylim([0 max(rasteraxis(:,4))]);
+                end
+            end
+        else    % use fdbkon
+            for i_coh = 1:n_dotcoh
+                for i_dir = 1:n_sacdir
+                    i_temp = i_coh + (i_dir-1)*n_dotcoh;
+                    trials_included = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & isnan(conditions(:,7)) & conditions(:,8)==3);
+                    if ~isempty(trialBounds)
+                        trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                    end
+                    sacon_rew{i_coh, i_dir} = alignTimes(trials_included,3) - alignTimes(trials_included,5);
+                    panel_rewon(i_temp) = subplot(plotrows, plotcols, 5+(i_temp-1)*plotcols);
+                    raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,5), ...
+                        sacon_rew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), panel_rewon(i_temp), ...
+                        ['FEEDBACK ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+%                     raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+%                         sacon_rew{i_coh, i_dir}, 1, timerange(4,1), timerange(4,2), '', ...
+%                         ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(sacdir_unique(i_dir))], 0 );
+                    raster_rewon{i_coh, i_dir} = raster_temp;
+%                     ylim([0 max(rasteraxis(:,4))]);
+                end
+            end
+            
+        end
+        str = [filename '  Unit ' num2str(data.spikes.id(iUnit)) '   ' flagtxt{flag+2} ' exclude trials#' a{4} 'rewcont ' a{12}];
+        %     suptitle(str);
+        suplabel(str,'t');
+        set(gcf,    'PaperOrientation', 'landscape', ...
+            'PaperPositionMode', 'manual', ...
+            'PaperUnits', 'inches', ...
+            'PaperPosition', [0.25 0.44 10.5 7.61]);
+%   return
+        %------------------------------     SDF plots       --------------------
+        figUnit(iUnit).sdf = figure; 
+        y = []; txt = '';
+%         col 1: aligned on target onset
+        panelSDF_tgton = subplot(plotrows,plotcols,[1:plotcols:n_dotcoh*plotcols]);
+        hold on;
+        [tBin_tgton, SDF_tgton] = SpikeDensityFunctionLD(raster_tgt(:,1), timerange(1,1), timerange(1,2), sigma);
+        plot(tBin_tgton, SDF_tgton, 'b-');
+        plot(median(dotson), 0, 'o');
+        plot(prctile(dotson,25), 0, 'o');
+        plot(prctile(dotson,75), 0, 'o');
+        xlim(timerange(1,:));
+        y = [y; axis];
+        title('Tgt On');
+
+%         col 2: aligned on dots onset
+%         panelSDF_doton(1) = figure;
+%         panelSDF_doton(2) = panelSDF_doton(1);
+        
+        for i_dir = 1:n_dotdir
+            panelSDF_doton(i_dir) = subplot(plotrows, plotcols, [2+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+            hold on;
+            for i_coh = 1:n_dotcoh
+                raster_temp = raster_doton{i_coh, i_dir};
+                if ~isempty(raster_temp)
+%                     [tBin_doton, SDF_doton{i_coh, i_dir}] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(2,1), timerange(2,2), sigma);
+                    [tBin_doton, SDF_doton{i_coh, i_dir}] = SpikeDensityFunction_exclude_LD(raster_temp(:,1),timerange(2,1), timerange(2,2), sigma, sacon_dot{i_coh, i_dir}, -100,1);
+                    if dot_dir_unique(i_dir)==t_rightup
+                        c = cohcolor(dot_coh_unique(i_coh), 1);
+                        txt = 'dots on -- right/up';
+                    else
+                        c = cohcolor(dot_coh_unique(i_coh), 0);
+                        txt = 'dots on -- left/down';
+                    end
+                    k =find( tBin_doton <= prctile(sacon_dot{i_coh, i_dir}, rt_percentile) );
+                    plot(tBin_doton(k), SDF_doton{i_coh, i_dir}(k), '-', 'color', c);
+                    plot(min(sacon_dot{i_coh, i_dir}), 0, '.', 'color',c);
+                end
+            end
+            xlim(timerange(2,:));
+            y = [y; axis];
+            title(txt);
+        end
+
+%         col 3: aligned on saccade onset
+        for i_dir = 1:n_sacdir
+            panelSDF_sacon(i_dir) = subplot(plotrows, plotcols, [3+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+            hold on;
+            for i_coh = 1:n_dotcoh
+                raster_temp = raster_sacon{i_coh, i_dir};
+                if ~isempty(raster_temp)
+%                     [tBin_doton, SDF_sacon{i_coh, i_dir}] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(3,1), timerange(3,2), sigma);
+                    [tBin_sacon, SDF_sacon{i_coh, i_dir}] = SpikeDensityFunction_exclude_LD1(raster_temp(:,1),timerange(3,1), timerange(3,2), sigma, dotson_sac{i_coh, i_dir}, 200, -1);
+                    if sacdir_unique(i_dir)==t_rightup
+                        c = cohcolor(dot_coh_unique(i_coh), 1);
+                        txt = 'Sac on -- right/up';
+                    else
+                        c = cohcolor(dot_coh_unique(i_coh), 0);
+                        txt = 'Sac on -- left/down';
+                    end
+                    k =find(tBin_sacon>= -prctile(sacon_dot{i_coh, i_dir}, rt_percentile) );
+                    plot(tBin_sacon(k), SDF_sacon{i_coh, i_dir}(k), '-', 'color', c);
+                    plot(max(dotson_sac{i_coh, i_dir}), 0, '.', 'color',c);
+                end
+            end
+            xlim(timerange(3,:));
+            y = [y; axis];
+            title(txt);
+        end
+ 
+%         col 4: aligned on feedback onset
+        for i_dir = 1:n_sacdir
+            panelSDF_fdbkon(i_dir) = subplot(plotrows, plotcols, [4+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+            hold on;
+            for i_coh = 1:n_dotcoh
+                raster_temp = raster_fdbkon{i_coh, i_dir};
+                if ~isempty(raster_temp)
+%                     [tBin_doton, SDF_sacon{i_coh, i_dir}] = SpikeDensityFunctionLD(raster_temp(:,1),timerange(3,1), timerange(3,2), sigma);
+                    [tBin_fdbkon, SDF_fdbkon{i_coh, i_dir}] = SpikeDensityFunction_exclude_LD(raster_temp(:,1),timerange(3,1), timerange(3,2), sigma, dotson_sac{i_coh, i_dir}, 200, -1);
+                    if sacdir_unique(i_dir)==t_rightup
+                        c = cohcolor(dot_coh_unique(i_coh), 1);
+                        txt = 'Feedback on -- right/up';
+                    else
+                        c = cohcolor(dot_coh_unique(i_coh), 0);
+                        txt = 'Feedback on -- left/down';
+                    end
+                    plot(tBin_fdbkon, SDF_fdbkon{i_coh, i_dir}, '-', 'color', c);
+                end
+            end
+            xlim(timerange(3,:));
+            y = [y; axis];
+            title(txt);
+        end
+
+%         col 5: aligned on reward onset
+        if flag>=0     % include only correct trials
+            for i_dir = 1:n_sacdir
+                panelSDF_rewon(i_dir) = subplot(plotrows, plotcols, [5+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+                hold on;
+                for i_coh = 1:n_dotcoh
+                    raster_temp = raster_rewon{i_coh, i_dir};
+                    if ~isempty(raster_temp)
+                        [tBin_rewon, SDF_rewon{i_coh, i_dir}] = SpikeDensityFunctionLD(raster_temp(:,1), timerange(4,1), timerange(4,2), sigma);
+                        if sacdir_unique(i_dir)==t_rightup
+                            c = cohcolor(dot_coh_unique(i_coh), 1);
+                            txt = 'Rew on -- sac right/up';
+                        else
+                            c = cohcolor(dot_coh_unique(i_coh), 0);
+                            txt = 'Rew on -- sac left/down';
+                        end
+                        plot(tBin_rewon, SDF_rewon{i_coh, i_dir}, '-', 'color', c);
+                        plot(max(sacon_rew{i_coh, i_dir}), 0, '.', 'color',c);
+                    end
+                end
+                xlim(timerange(4,:));
+                y = [y; axis];
+                title(txt);
+            end
+        else
+            for i_dir = 1:n_sacdir
+                panelSDF_rewon(i_dir) = subplot(plotrows, plotcols, [5+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+                hold on;
+                for i_coh = 1:n_dotcoh
+                    raster_temp = raster_rewon{i_coh, i_dir};
+                    if ~isempty(raster_temp)
+                        [tBin_rewon, SDF_rewon{i_coh, i_dir}] = SpikeDensityFunctionLD(raster_temp(:,1), timerange(4,1), timerange(4,2), sigma);
+                        if sacdir_unique(i_dir)==t_rightup
+                            c = cohcolor(dot_coh_unique(i_coh), 1);
+                            txt = 'FEEDBACK on -- sac right/up';
+                        else
+                            c = cohcolor(dot_coh_unique(i_coh), 0);
+                            txt = 'FEEDBACK on -- sac left/down';
+                        end
+                        plot(tBin_rewon, SDF_rewon{i_coh, i_dir}, '-', 'color', c);
+                        plot(max(sacon_rew{i_coh, i_dir}), 0, '.', 'color',c);
+                    end
+                end
+                xlim(timerange(4,:));
+                y = [y; axis];
+                title(txt);
+            end
+            
+        end
+        ymax = max(y(:,4));
+        axes(panelSDF_tgton);
+        plot([0 0], [0 ymax], 'k--');
+        ylim([0 ymax]);
+%         set(gca,'XMinorGrid','on');
+
+        for i_dir =1:n_dotdir
+            axes(panelSDF_doton(i_dir));
+            plot([0 0], [0 ymax], 'k--');
+            ylim([0 ymax]);
+%             set(gca,'XMinorGrid','on');
+            axes(panelSDF_sacon(i_dir));
+            plot([0 0], [0 ymax], 'k--');
+            ylim([0 ymax]);
+%             set(gca,'XMinorGrid','on');
+            if flag>=0
+                axes(panelSDF_rewon(i_dir));
+                plot([0 0], [0 ymax], 'k--');
+                ylim([0 ymax]);
+                set(gca,'XMinorGrid','on');
+            end
+        end
+        suplabel(str,'t');
+        set(gcf,    'PaperOrientation', 'landscape', ...
+            'PaperPositionMode', 'manual', ...
+            'PaperUnits', 'inches', ...
+            'PaperPosition', [0.25 0.44 10.5 7.61]);
+        
+%         return
+%% regression for direction
+    % added 4-10-08 Long Ding, use all spikes for >0 coherences
+        flag_regress_direction = 0;
+        if flag_regress_direction
+            trials_included = find(conditions(:,6)==1 & conditions(:,3)~=0 & conditions(:,8)==3);
+            if ~isempty(trialBounds)
+                trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+            end
+            direction = conditions(trials_included, 4);
+            direction(direction==t_leftdown)= -1;
+            direction(direction==t_rightup)=  1;
+            regressors = [ones(size(direction)) direction ];
+            n = size(regressors,2);
+            regnames = {'base', 'direction' };
+            figUnit(iUnit).regressDirection = figure;
+            %         col 1: aligned on dots onset
+            for i=1:n
+                plotaxis(i) = subplot(n,3,3*i-2);
+            end
+            raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+                alignTimes(trials_included,2), 0 , timerange(2,1), timerange(2,2), [], ...
+                ['DOTS ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+            [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('dot ~ ' ,regnames), timebin, slidestep, 0, timerange(2,2), plotaxis, 'b');
+
+            %         col 2: aligned on sac onset
+            for i=1:n
+                plotaxis(i) = subplot(n,3,3*i-1);
+            end
+            raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                alignTimes(trials_included,2), 0 , timerange(3,1), timerange(3,2), [], ...
+                ['SAC ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+            [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('sac ~' ,regnames), timebin, slidestep,  timerange(3,1), timerange(3,2), plotaxis, 'b');
+            %         col 3: aligned on reward onset
+            for i=1:n
+                plotaxis(i) = subplot(n,3,3*i);
+            end
+            raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+                alignTimes(trials_included,2), 0 , timerange(4,1), timerange(4,2), [], ...
+                ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+            [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('rew ~ ' ,regnames), timebin, slidestep, timerange(4,1), timerange(4,2), plotaxis, 'b');
+            suplabel(str,'t');
+            set(gcf,    'PaperOrientation', 'landscape', ...
+                'PaperPositionMode', 'manual', ...
+                'PaperUnits', 'inches', ...
+                'PaperPosition', [0.25 0.44 10.5 7.61]);
+
+            drawnow;
+        end
+
+%% regression for coherence only
+        flag_regress_coh = 0;
+        if flag_regress_coh 
+            % -------------------- regression for coherence --------------
+            figUnit(iUnit).regressCoh = figure;
+            %         col 2: aligned on dots onset, regress separately for diff
+            %         directions
+            for i_dir = 1:n_dotdir
+                panelReg_doton(i_dir) = subplot(plotrows, plotcols, [2+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+                [tbin, b_out, bint_out] = regressCoh_LD(raster_doton, dot_coh_unique, i_dir, timebin, timerange(2,1), timerange(2,2), panelReg_doton(i_dir));
+                if dot_dir_unique(i_dir)==t_rightup
+                    txt = 'dots on -- right/up';
+                else
+                    txt = 'dots on -- left/down';
+                end
+                title(txt);
+            end
+
+            %         col 3: aligned on sac onset, regress separately for diff
+            %         sac directions
+            for i_dir = 1:n_sacdir
+                panelReg_sacon(i_dir) = subplot(plotrows, plotcols, [3+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+                [tbin, b_out, bint_out] = regressCoh_LD(raster_sacon, dot_coh_unique, i_dir, timebin, timerange(3,1), timerange(3,2), panelReg_sacon(i_dir));
+                if sacdir_unique(i_dir)==t_rightup
+                    txt = 'sac on -- right/up';
+                else
+                    txt = 'sac on -- left/down';
+                end
+                title(txt);
+            end
+
+            %         col 4: aligned on reward onset, regress separately for diff
+            %         sac directions
+            if flag>=0
+                for i_dir = 1:n_sacdir
+                    panelReg_rewon(i_dir) = subplot(plotrows, plotcols, [4+(i_dir-1)*n_dotcoh*plotcols:plotcols:i_dir*n_dotcoh*plotcols]);
+                    [tbin, b_out, bint_out] = regressCoh_LD(raster_rewon, dot_coh_unique, i_dir, timebin, timerange(4,1), timerange(4,2), panelReg_rewon(i_dir));
+                    if sacdir_unique(i_dir)==t_rightup
+                        txt = 'rew on -- sac right/up';
+                    else
+                        txt = 'rew on -- sac left/down';
+                    end
+                    title(txt);
+                end
+            end
+            suplabel(str,'t');
+            set(gcf,    'PaperOrientation', 'landscape', ...
+                'PaperPositionMode', 'manual', ...
+                'PaperUnits', 'inches', ...
+                'PaperPosition', [0.25 0.44 10.5 7.61]);
+            drawnow;
+        end
+        
+%% regression for coherence and RT
+    % modified 4-10-08 Long Ding, do analysis for the two directions
+    % separately
+%         load 'test_CyRT080118c.mat'
+        flag_regression_multi = 1;
+        if flag_regression_multi
+            directions = [ t_rightup t_leftdown];
+            for i_dir = 1:2
+                switch flag
+                    case 0     %             include all finished trials
+                        trials_included = find(conditions(:,6)>=0 & conditions(:,5)==i_dir & conditions(:,8)==3);
+                    case 1     %             include only correct trials
+                        trials_included = find(conditions(:,6)==1 & conditions(:,5)==i_dir & conditions(:,8)==3);
+                    case -1    %             include only wrong choice trials
+                        trials_included = find(conditions(:,6)==0 & conditions(:,5)==i_dir & conditions(:,8)==3);
+                end
+                if ~isempty(trialBounds)
+                    trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+                end
+                
+                %   exclude trials with short RT
+                coherence = conditions(trials_included, 3);
+                maxcoh = max(coherence);
+                icohmax = find(coherence == maxcoh);
+                rt_maxcoh = alignTimes(trials_included(icohmax), 3) - alignTimes(trials_included(icohmax), 2);
+                rt_maxcoh_p = prctile(rt_maxcoh, rt_percentile);
+                rt = alignTimes(trials_included, 3) - alignTimes(trials_included, 2);
+                trials_goodrt = find(rt>rt_maxcoh_p);
+                trials_included = trials_included(trials_goodrt);
+                
+                %   set up regressors
+                coherence = conditions(trials_included, 3);
+                rt = alignTimes(trials_included, 3) - alignTimes(trials_included, 2);
+                rt = rt /1000.0;
+                regressors = [ones(size(coherence)) coherence rt];
+                n = size(regressors,2);
+                regressorcoh = [ones(size(coherence)) coherence];
+                regnames = {'base', 'coherence' ,'rt'};
+                
+                figUnit(iUnit).regressCohRT(i_dir) = figure;
+                %         col 1: aligned on dots onset
+                for i=1:n
+                    plotaxis(i) = subplot(n,3,3*i-2);
+                end
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+                    rt, 0 , timerange(2,1), timerange(2,2), [], ...
+                    ['DOTS ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('dot ~ ' ,regnames), timebin, slidestep,  timerange(2,1), rt_maxcoh_p, plotaxis, 'b');
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressorcoh, strcat('dot ~ ' ,regnames), timebin, slidestep,  timerange(2,1), rt_maxcoh_p, plotaxis, 'm');
+
+                %         col 2: aligned on sac onset
+                for i=1:n
+                    plotaxis(i) = subplot(n,3,3*i-1);
+                end
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                    rt, 0 , timerange(3,1), timerange(3,2), [], ...
+                    ['SAC ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('sac ~' ,regnames), timebin, slidestep, -rt_maxcoh_p, timerange(3,2), plotaxis, 'b');
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressorcoh, strcat('sac ~ ' ,regnames), timebin, slidestep,   -rt_maxcoh_p, timerange(3,2), plotaxis, 'm');
+                
+                %----------- simple test for RT dependence of sac activity,
+%                 %   stratified by coherence level
+%                 for i_coh = 1:n_dotcoh
+%                     test_trials = find(conditions(:,3)==dot_coh_unique(i_coh) & sacdir == sacdir_unique(i_dir) & conditions(:,6)==1 & conditions(:,8)==3);
+%                     raster_temp = plotRasterLDdots(data, test_trials, iUnit, alignTimes(test_trials,3), ...
+%                         rt, 0 , -300, 200, [], ...
+%                         ['SAC ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+%                     test_regressors = [ones(size(test_trials)) alignTimes(test_trials,3) - alignTimes(test_trials, 2)];
+%                     [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, test_regressors, strcat('sac ~ ' ,'RT alone'), 200, 30,   -100, 150, [], 'm');
+%                     if bint_out(4)*bint_out(3)>0
+%                         disp(['coh ' num2str(dot_coh_unique(i_coh)) '  ' num2str(b_out(2)) ' ' num2str(bint_out(3)) ' ' num2str(bint_out(4)) ' **']);
+%                     else
+%                         disp(['coh ' num2str(dot_coh_unique(i_coh)) '  ' num2str(b_out(2)) ' ' num2str(bint_out(3)) ' ' num2str(bint_out(4)) ]);
+%                     end
+%                  end
+                %-------------
+                
+                %         col 3: aligned on reward onset (note: minimum delay to reward is 400 ms 
+                %                per. REX paradigm long2.d)
+                for i=1:n
+                    plotaxis(i) = subplot(n,3,3*i);
+                end
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,4), ...
+                    rt, 0 , timerange(4,1), timerange(4,2), [], ...
+                    ['REW ON    coh ' num2str(dot_coh_unique(i_coh)) ' dir ' num2str(dot_dir_unique(i_dir))], 0 );
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressors, strcat('rew ~ ' ,regnames), timebin, slidestep, -200, timerange(4,2), plotaxis, 'b');
+                [tbin, b_out, bint_out] = regressMultiFactor_LD(raster_temp, regressorcoh, strcat('rew ~ ' ,regnames), timebin, slidestep,  -200, timerange(4,2), plotaxis, 'm');
+                suplabel([str ' dir ' num2str(i_dir)],'t');
+                set(gcf,    'PaperOrientation', 'landscape', ...
+                    'PaperPositionMode', 'manual', ...
+                    'PaperUnits', 'inches', ...
+                    'PaperPosition', [0.25 0.44 10.5 7.61]);
+
+                drawnow;
+            end
+        end
+%       return  
+%% choice probability
+        flagCP = 1;
+        
+        if flagCP && ~isempty(find(conditions(:,3)==0 & conditions(:,8)==3))
+            figureCP = figure;
+            trialnum = zeros(2,1);
+            % row 1: aligned on dots on
+            panelCP_raster1_dotson = subplot(2,3,1);
+            trials_included = find(conditions(:,3)==0 & conditions(:,5)==1 & conditions(:,8)==3);
+            trialnum(1) = length(trials_included);
+            raster1 = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+                alignTimes(trials_included, 3) - alignTimes(trials_included, 2), 1, timerange(2,1), timerange(2,2), ...
+                panelCP_raster1_dotson,         'Dots ON coherence 0 choice1', 0 );
+            panelCP_raster2_dotson = subplot(2,3,2);
+            trials_included = find(conditions(:,3)==0 & conditions(:,5)==2 & conditions(:,8)==3);
+            trialnum(2) = length(trials_included);
+            raster2 = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,2), ...
+                alignTimes(trials_included, 3) - alignTimes(trials_included, 2), 1, timerange(2,1), timerange(2,2),...
+                panelCP_raster2_dotson,         'Dots ON coherence 0 choice2', 0 );
+            panelCP_dotson = subplot(2,3,3);
+            [tbin, cp_out] = ChoiceProb_LD(raster1(:,1), raster2(:,1), timerange(2,1), timerange(2,2),timebin, slidestep, panelCP_dotson, 0);
+            
+            % row 2: aligned on sac on
+            panelCP_raster1_sacon = subplot(2,3,4);
+            trials_included = find(conditions(:,3)==0 & conditions(:,5)==1 & conditions(:,8)==3);
+            raster1 = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                alignTimes(trials_included, 2) - alignTimes(trials_included, 3), 1, timerange(3,1), timerange(3,2), ...
+                panelCP_raster1_sacon,         'Sac ON coherence 0 choice1', 0 );
+            panelCP_raster2_sacon = subplot(2,3,5);
+            trials_included = find(conditions(:,3)==0 & conditions(:,5)==2 & conditions(:,8)==3);
+            raster2 = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,3), ...
+                alignTimes(trials_included, 2) - alignTimes(trials_included, 3), 1, timerange(3,1), timerange(3,2),...
+                panelCP_raster2_sacon,         'Sac ON coherence 0 choice2', 0 );
+            panelCP_sacon = subplot(2,3,6);
+            [tbin, cp_out] = ChoiceProb_LD(raster1(:,1), raster2(:,1), timerange(3,1), timerange(3,2), timebin, slidestep, panelCP_sacon, 0);
+            suplabel(str,'t');
+            
+            % resize figures to match # of trials.
+            subi = [1,2,4,5];
+            for i=1:4
+                subplot(2,3, subi(i));
+                ylim([0 max(trialnum)]);
+            end
+        end
+        
+
+%% predictive index
+        flagPredict = 1;
+        
+        if flagPredict 
+            timebin = str2num(a{9});
+            slidestep = str2num(a{10});
+            figurePredict = figure;
+            % row 1: aligned on dots on
+            panelPredict_dotson = subplot(1,2,1);
+            hold on;
+            tbin = [timerange(2,1):slidestep:timerange(2,2)-timebin];
+            nbin = length(tbin);            
+            pi_out = zeros(n_dotcoh, nbin);
+            legendTxt = cell(1, n_dotcoh);
+            for i_coh = 1:n_dotcoh
+                 [tbin, pi_out(i_coh,:)] = ChoiceProb_LD(raster_doton{i_coh, 1}(:,1),raster_doton{i_coh, 2}(:,1), timerange(2,1), timerange(2,2), timebin, slidestep, [], 0);
+                 legendTxt{i_coh} = num2str(dot_coh_unique(i_coh));
+            end
+            plot(tbin+timebin/2, pi_out);
+            xlim(timerange(2,:));
+            ylim([0 1]);
+            plot(timerange(2,:), [0.5 0.5],'--');
+            plot([0 0], [0 1],'--');
+            legend(panelPredict_dotson,legendTxt);
+            
+            % row 2: aligned on sac on
+            panelCP_Predict_sacon = subplot(1,2,2);
+            hold on;
+            tbin = [timerange(3,1):slidestep:timerange(3,2)-timebin];
+            nbin = length(tbin);            
+            pi_out = zeros(n_dotcoh, nbin);
+            for i_coh = 1:n_dotcoh
+                 [tbin, pi_out(i_coh,:)] = ChoiceProb_LD(raster_sacon{i_coh, 1}(:,1),raster_sacon{i_coh, 2}(:,1), timerange(3,1), timerange(3,2), timebin, slidestep, [], 0);
+            end
+            plot(tbin+timebin/2, pi_out);
+            xlim(timerange(3,:));
+            ylim([0 1]);
+            plot(timerange(3,:), [0.5 0.5],'--');
+            plot([0 0], [0 1],'--');
+            suplabel(str,'t');
+
+        end
+    end
+end
+
+    
+
+
+
+
+
+% --------------------------------------------------------------------
+function mnuScatterActivityRT_Callback(hObject, eventdata, handles)
+% 2-3-2008    intend to show how activity level within a specified time
+% window relates to reaction time and dots coherence
+data = handles.data;
+
+dlg_title = 'Settings';
+prompt = {'UnitID', 'Trials to include (Error -1, All 0, Correct 1)', 'trials to exclude by #','align (1-tgton, 2-dotson, 3-sacon, 4-rewon', 'time range'};
+def = {'','1', '', '2', '200:400'};
+a = inputdlg(prompt, dlg_title, 1, def);
+if isempty(a)
+    disp('settings: wrong inputs');
+    return
+end
+if isempty(a{1})
+    unitID = 2001;
+else
+    unitID = str2num(a{1});
+end
+
+flag = str2num(a{2});
+flagtxt = {'Error', 'All', 'Correct'};
+
+% remove trials in exclude list
+trials_bounds = parseSymbol(a{3},'-,');
+if isempty(a{3})
+    trialBounds = [];
+else
+    trialBounds = parseSymbol(a{3},'-');
+end
+
+% parse time ranges
+timerange = parseSymbol(a{5},':');
+
+filename = data.header.filename{1};
+k = findstr('\', filename);
+k = k(end);
+filename = filename(k+1:end);
+
+colTaskID = find(strcmp('taskid', data.ecodes.name),1);
+taskid = data.ecodes.data(:, colTaskID);
+trials = find(taskid == 3);
+if isempty(trials)
+    disp('no data from dotsRT task');
+    return;
+end
+    
+% get condition ecodes
+conditions_list = {'trialid', 't1_angle', 'dot_coh', 'dot_dir', 'choice', 'correct', 'reward'};
+nConditions = length(conditions_list);
+conditions = [];
+for i = 1:nConditions
+    col = find(strcmp(conditions_list{i}, data.ecodes.name),1);
+    conditions = [conditions; data.ecodes.data(:,col)'];
+end
+
+% remove trials with nan as dots coherence
+non_nanItems = find(~isnan(conditions(3,:)));
+conditions = conditions(:,non_nanItems)';
+
+dot_dir_unique = sort(unique(conditions(:,4)));
+n_dotdir = length(dot_dir_unique);
+if n_dotdir>2
+    dlg_title = '!!! more than 2 dot directions';
+    dotdir_txt = '';
+    for i=1:n_dotdir
+        dotdir_txt = [dotdir_txt ' ' num2str(dot_dir_unique(i))];
+    end
+    prompt = {['angle1 to use ' dotdir_txt],['angle2 to use ' dotdir_txt]};
+    if ~isempty(a)
+        a = inputdlg(prompt, dlg_title, 1, {'0', '180'});
+        dot_dir_unique = [str2num(a{1}), str2num(a{2})];
+        n_dotdir = 2;
+    else
+        disp('no angle selected');
+        return;
+    end
+end
+temp = min(dot_dir_unique);
+if temp<=90
+    t_rightup = temp;
+    t_leftdown = mod(temp+180, 360);
+else
+    t_rightup = mod(temp+180, 360);
+    t_leftdown = temp;
+end
+sacdir = find(conditions(:,4)==t_rightup);
+conditions(sacdir,4) = 1;
+sacdir = find(conditions(:,4)==t_leftdown);
+conditions(sacdir,4) = -1;
+
+trials_included = find(conditions(:,6)>-2);
+if ~isempty(trialBounds)
+    trials_included = trials_included(trials_included<trialBounds(1)|trials_included>trialBounds(2));
+end
+
+% get alignment times
+align_list = {'tgt_on', 'dot_on', 'sac_on_offline','rew_on'};
+iAlign = str2num(a{4});
+col = find(strcmp(align_list{iAlign}, data.ecodes.name),1);
+alignTimes = data.ecodes.data(:,col);
+col_dotson = find(strcmp(align_list{2}, data.ecodes.name),1);
+col_sacon = find(strcmp(align_list{3}, data.ecodes.name),1);
+RT = data.ecodes.data(:,col_sacon) - data.ecodes.data(:,col_dotson);
+
+% get unitID
+iUnit = find(data.spikes.id == unitID);
+
+
+
+% separate trials by choice, rather than by dots direction
+% create array with [trialno, coh, choice, RT, spikecount, spikerate]
+timewin = (timerange(2) - timerange(1))/1000;
+nTrials = length(trials_included);
+aRT_out = zeros(nTrials, 5);
+for i=1:nTrials
+    iTrial = trials_included(i);
+    sp = data.spikes.data{iTrial, iUnit}-alignTimes(iTrial);
+    aRT_out(i, 1) = iTrial;
+    aRT_out(i, 2) = conditions(iTrial, 3) * conditions(iTrial,4);
+    aRT_out(i, 3) = conditions(iTrial, 5);
+    aRT_out(i, 4) = RT(iTrial);
+    aRT_out(i, 5) = length( find(sp>=timerange(1)&sp<=timerange(2)) );
+    aRT_out(i, 6) = aRT_out(i, 5)/timewin;
+end
+
+dot_coh_unique = sort(unique(aRT_out(:, 2)));
+n_dotcoh = length(dot_coh_unique);
+y = max(aRT_out(:,6));
+x = max(aRT_out(:,4));
+figActivityRT = figure;
+for iplot = 1:2
+    subplot(2,1,iplot); hold on;
+    for icoh=1: n_dotcoh
+        k = find(aRT_out(:,2) == dot_coh_unique(icoh) & aRT_out(:,3)==iplot);
+        flag = (dot_coh_unique(icoh)>0);
+        if (flag == 0 && iplot == 2 ) || (flag == 1 && iplot == 1)
+            plot(aRT_out(k, 4), aRT_out(k,6), '.', 'color', cohcolor(dot_coh_unique(icoh), flag));
+            % linear fit, exclude all trials with RT<300
+            RTfit = aRT_out(k,4); spfit = aRT_out(k,6);
+            itemp = find(RTfit>300);
+            RTfit = RTfit(itemp); spfit = spfit(itemp);
+            prt = polyfit(RTfit, spfit,1);
+            fitx = [min(RTfit) max(RTfit)];
+            fity = prt(1)*fitx+prt(2);
+            plot(fitx, fity, '-', 'color',cohcolor(dot_coh_unique(icoh), flag));
+        end
+    end
+    axis([0 x 0 y]);
+    ylabel('Spike rate (sp/sec)');
+    xlabel('Reaction time (msec)');
+end
+filename = data.header.filename{1};
+k = findstr('\', filename);
+k = k(end);
+filename = filename(k+1:end);
+str = [filename '  Unit ' num2str(data.spikes.id(iUnit)) '      aligned on ' align_list{iAlign} '   time range ' a{5}];  
+suplabel(str,'t');
+% save('test.mat', 'aRT_out', 'a');
+    
+
+
+% --------------------------------------------------------------------
+
+
+
+
+% --------------------------------------------------------------------
+function mnuNeuralAlignSacGroupRT_Callback(hObject, eventdata, handles)
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+dlg_title = 'Settings';
+prompt = {'UnitID', 'Trials to include (Error -1, All 0, Correct 1)', 'sigma', 'excludetime', 'rtbinsize'};
+def = {'2001','1', '20', '200', '50'};
+a = inputdlg(prompt, dlg_title, 1, def);
+if isempty(a)
+    disp('settings: wrong inputs');
+    return
+end
+if isempty(a{1})
+    unitID = 2001;
+else
+    unitID = str2num(a{1});
+end    
+SDFs = SDFgroupRT(data, unitID, str2num(a{4}), str2num(a{5}), str2num(a{3}), str2num(a{2}), 1);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over butSacOnOffline.
+
+
+
+
+% --- Executes on button press in chkCorrect.
+function chkCorrect_Callback(hObject, eventdata, handles)
+% hObject    handle to chkCorrect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkCorrect
+
+
+% --- Executes on button press in chkError.
+function chkError_Callback(hObject, eventdata, handles)
+% hObject    handle to chkError (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkError
+
+
+% --- Executes on button press in chkBrFix.
+function chkBrFix_Callback(hObject, eventdata, handles)
+% hObject    handle to chkBrFix (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkBrFix
+
+
+% --- Executes on button press in chkNCerr.
+function chkNCerr_Callback(hObject, eventdata, handles)
+% hObject    handle to chkNCerr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of chkNCerr
+
+
+
+
+% --- Executes on selection change in listUnitID.
+function listUnitID_Callback(hObject, eventdata, handles)
+% hObject    handle to listUnitID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = get(hObject,'String') returns listUnitID contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from listUnitID
+
+
+% --- Executes during object creation, after setting all properties.
+function listUnitID_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to listUnitID (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+% --------------------------------------------------------------------
+function mnuBehavior1DRI_Callback(hObject, eventdata, handles)
+
+    data = handles.data;
+    filename = data.header.filename{1};
+    k = findstr('\', filename);
+    k = k(end);
+    filename = filename(k+1:end);
+
+    % get condition ecodes
+    conditions_list = {'trialid', 't1_angle', 'correct', 'reward', 'taskid'};
+    nConditions = length(conditions_list);
+    conditions = [];
+    for i = 1:nConditions
+        col = find(strcmp(conditions_list{i}, data.ecodes.name),1);
+        conditions = [conditions; data.ecodes.data(:,col)'];
+    end
+    conditions = conditions';
+    i_correct = logical(conditions(:,3) == 1);
+    % get alignment times
+    align_list = {'tgt_on', 'fp_off', 'sac_on_offline','rew_on'};
+    nAlign = length(align_list);
+    alignTimes = [];
+    for i = 1:nAlign
+        col = find(strcmp(align_list{i}, data.ecodes.name),1);
+        alignTimes = [alignTimes; data.ecodes.data(:,col)'];
+    end
+    alignTimes = alignTimes';
+
+    ncol = 3; nrow = 2;
+    figure;
+    for mgsvgs = 1:2
+        % mgsvgs = 1; % MGS
+        % mgsvgs = 2; % VGS
+        trials = logical(conditions(:,5) == mgsvgs);
+        if sum(trials)>0
+            rt = cell(1,4);
+            rew = cell(1,4);
+            t1 = zeros(1,4);
+            for i=1:4
+                i_trial(:,i) = logical( conditions(:, 1) == mgsvgs*100 + i-1) & i_correct;
+                switch mgsvgs
+                    case 1
+                        rt{i} = alignTimes(i_trial(:, i),3) - alignTimes(i_trial(:, i),2);
+                    case 2
+                        rt{i} = alignTimes(i_trial(:, i),3) - alignTimes(i_trial(:, i),1);
+                end
+                rew{i} = unique(conditions(i_trial(:,i),4));
+                t1(i) = unique(conditions(i_trial(:,i),2));
+            end
+            % plot histgram of rt
+            subplot(nrow, ncol, 1 + (mgsvgs-1)*ncol); hold on;
+            tbin = [0:100:1000];
+            br = hist(rt{3}, tbin);
+            sr = hist(rt{1}, tbin);
+            bar(tbin, br, 'r');
+            bar(tbin, -sr, 'b');
+            xlim([0 1000]);
+            bias = mean(rt{1}) - mean(rt{3});
+            title(['bias = ' num2str(bias) ' ms']);
+            subplot(nrow, ncol, 2 + (mgsvgs-1)*ncol); hold on;
+            tbin = [0:100:1000];
+            br = hist(rt{2}, tbin);
+            sr = hist(rt{4}, tbin);
+            bar(tbin, br, 'r');
+            bar(tbin, -sr, 'b');
+            xlim([0 1000]);
+            bias = mean(rt{4}) - mean(rt{2});
+            title(['bias = ' num2str(bias) ' ms']);
+         end
+    end
+    suptitle(filename);
+
+
+
+% --------------------------------------------------------------------
+function mnuNeuralSDF_dotsRT_AR_Callback(hObject, eventdata, handles)
+% Long Ding 2009-03-13 regression not implemented, only for displaying SDFs
+% for visual comparison; align on four events (tgton, dotson, sacon,
+% rewon); one figure for one motion/choice direction;
+
+data = handles.data;
+
+dlg_title = 'SDF-dotsRT Settings';
+prompt = {  'UnitID', ...
+            'Trials to include (Error -1, All 0, Correct 1)', ...
+            'Gaussian kernel sigma', ...
+            'trials to exclude by #', ...
+            'time range tgton', ...
+            'time range dots on', ...
+            'time range sac on', ...
+            'time range rew on', ...
+            'timebin for predictive index', ...
+            'slidestep for predictive index', ...
+            'rt percentile to include', ...
+            'reward contingency'};
+def = {'2001','1', '20', '', '-500:1000', '-500:1000', '-500:1000','-500:1000', '300', '100', '50', '2'};
+a = inputdlg(prompt, dlg_title, 1, def);
+if isempty(a)
+    disp('settings: wrong inputs');
+    return
+end
+% ASSIGN INPUT VALUES
+if findstr(a{1},'all')
+    allunits = 1;
+else
+    allunits = 0;
+    unitID = str2num(a{1});
+end
+
+flag = str2num(a{2});
+sigma = str2num(a{3});
+if isempty(a{4})
+    trialBounds = [];
+else
+    trialBounds = parseSymbol(a{4},'-');
+end
+flagtxt = {'Error', 'All', 'Correct'};
+
+timerange = [];
+for i=5:8
+    timerange = [timerange; parseSymbol(a{i},':')];
+end
+
+timebin = str2num(a{9});
+slidestep = str2num(a{10});
+rt_percentile = str2num(a{11});
+
+filename = data.header.filename{1};
+k = findstr('\', filename);
+if ~isempty(k)
+    k = k(end);
+else
+    k=0;
+end
+
+filename = filename(k+1:end);
+
+% GET CONDITIONS CODE
+% use offline results
+conditions_list = {'trialid', 't1_angle', 'dot_coh', 'dot_dir', 'choice', 'correct', 'reward', 'taskid', 'rewcont'};
+% use REX results
+% conditions_list = {'trialid', 't1_angle', 'dot_coh', 'dot_dir', 'choice', 'OLscore', 'reward', 'taskid', 'rewcont'};
+nConditions = length(conditions_list);
+conditions = [];
+for i = 1:nConditions
+    col = find(strcmp(conditions_list{i}, data.ecodes.name),1);
+    conditions = [conditions; data.ecodes.data(:,col)'];
+end
+
+% REMOVE TRIALS SPECIFIED IN INPUT DIALOG
+if ~isempty(trialBounds)
+    conditions(8, trialBounds(1):trialBounds(2)) = NaN;
+    conditions(3, trialBounds(1):trialBounds(2)) = NaN;
+end
+trials = find(conditions(8,:) == 3);
+if isempty(trials)
+    disp('no data from dotsRT task');
+    return;
+end
+
+% REMOVE TRIALS WITH NON-ASYMMETRIC REWARD CONTINGENCIES 
+i_include = logical(conditions(9,:) == 0) | logical(conditions(9,:) == 1);
+conditions(3, ~i_include) = NaN;
+conditions(8, ~i_include) = NaN; 
+
+% IDENTIFY COHERENCES USED, EXCLUDE NaN
+i_exclude = logical(isnan(conditions(3,:)));
+conditions1 = conditions(:,~i_exclude)';
+dot_coh_unique = sort(unique(conditions1(:,3)));
+
+conditions = conditions';
+if isempty(dot_coh_unique)
+    disp ('no matching reward contingency ');
+    return
+end
+n_dotcoh = length(dot_coh_unique);
+
+% %%%%%%  making figures for only a subset of coherence 
+% figureflag = 1;
+% dot_coh_unique = [32 128 512]/10;
+% %%%%%%
+
+% IDENTIFY MOTION/SAC DIRECTIONS, ASSIGN DIR 1 TO RIGHT/UP ANGLES
+dot_dir_unique = sort(unique(conditions1(:,4)));
+n_dotdir = length(dot_dir_unique);
+if n_dotdir>2
+    dlg_title = '!!! more than 2 dot directions';
+    dotdir_txt = '';
+    for i=1:n_dotdir
+        dotdir_txt = [dotdir_txt ' ' num2str(dot_dir_unique(i))];
+    end
+    prompt = {['angle1 to use ' dotdir_txt],['angle2 to use ' dotdir_txt]};
+    temp = inputdlg(prompt, dlg_title, 1, {'0', '180'});
+    if ~isempty(temp)
+        dot_dir_unique = [str2num(temp{1}), str2num(temp{2})];
+        n_dotdir = 2;
+    else
+        disp('no angle selected');
+        return;
+    end
+end
+temp = min(dot_dir_unique);
+if temp<=90
+    t_rightup = temp;
+    t_leftdown = mod(temp+180, 360);
+else
+    t_rightup = mod(temp+180, 360);
+    t_leftdown = temp;
+end
+t1_angles = unique(conditions1(:,2));
+dot_dir_unique = [t_rightup t_leftdown]
+sacdir = -ones(size(conditions(:,5)));
+temp = find(conditions(:,5)==1);
+sacdir(temp) = t_rightup;
+temp = find(conditions(:,5)==2);
+sacdir(temp) = t_leftdown;
+sacdir_unique = [t_rightup t_leftdown];
+n_sacdir = 2;
+
+% GET ALIGNMENT TIMES
+% use offline behavioral measures
+align_list = {'tgt_on', 'dot_on', 'sac_on_offline','rew_on', 'fdbkon', 'targoff', 'omitrew'};
+% use online ecodes
+% align_list = {'tgt_on', 'dot_on', 'sac_on','rew_on', 'fdbkon', 'targoff', 'omitrew'};
+
+nAlign = length(align_list);
+alignTimes = [];
+for i = 1:nAlign
+    col = find(strcmp(align_list{i}, data.ecodes.name),1);
+    alignTimes = [alignTimes; data.ecodes.data(:,col)'];
+end
+% alignTimes = alignTimes(:,non_nanItems)';
+alignTimes = alignTimes';
+
+% GET INDICES FOR COMMONLY USED CONDITIONS
+n_trials = size(conditions, 1);
+ind_rewcont = zeros(n_trials, 2);
+for i=1:2
+    ind_rewcont(:,i) = logical( conditions(:,9)==(i-1) );
+end
+ind_nonzerocoh = logical( conditions(:,3)~=0 & ~isnan(conditions(:,3)) );
+ind_non512coh = logical( conditions(:,3)~=51.2 & ~isnan(conditions(:,3)) );
+ind_coh = zeros(n_trials, n_dotcoh);
+for i=1:n_dotcoh
+    ind_coh(:,i) = logical( conditions(:,3)==dot_coh_unique(i) );
+end
+ind_dotdir = zeros(n_trials, 2);
+ind_sacdir = zeros(n_trials, 2);
+for i=1:2
+    ind_dotdir(:,i) = logical( conditions(:,4) == dot_dir_unique(i) );
+    ind_sacdir(:,i) = logical( sacdir == sacdir_unique(i) );
+end
+ind_correct = logical( conditions(:,6)==1 );
+ind_err = logical( conditions(:,6)==0 );
+
+% DEFINE TEXT FOR TITLES
+temp = [];
+rt_temp = conditions(ind_rewcont(:,1)& ind_sacdir(:,1), 7);
+rew_dir1_rewcont0 = mean( rt_temp(~isnan(rt_temp)) );
+rt_temp = conditions(ind_rewcont(:,1)& ind_sacdir(:,2), 7);
+rew_dir2_rewcont0 = mean( rt_temp(~isnan(rt_temp)) );
+if rew_dir1_rewcont0>rew_dir2_rewcont0
+    txt_rewcont = {['RewCont 0: LargeR+Angle' num2str(sacdir_unique(1)) ' SmallR+Angle' num2str(sacdir_unique(2))], ...
+        ['RewCont 1: SmallR+Angle' num2str(sacdir_unique(1)) ' LargeR+Angle' num2str(sacdir_unique(2))]};
+else
+    txt_rewcont = {['RewCont 0: SmallR+Angle' num2str(sacdir_unique(1)) ' LargeR+Angle' num2str(sacdir_unique(2))], ...
+        ['RewCont 1: LargeR+Angle' num2str(sacdir_unique(1)) ' SmallR+Angle' num2str(sacdir_unique(2))]};
+end    
+txt_fig = {'TGT', 'DOTS', 'SAC', 'REW'};
+
+color_rewcont = [1 0 0; 0 0 1];
+nUnits = length(data.spikes.id);
+common_text = char(filename, txt_rewcont{1}, txt_rewcont{2});
+common_text = char(common_text, 'o-cool/warm colors: direction; gx-reward; o-red/blue-coherence; magenta-bar-CP');
+iUnit = find(data.spikes.id == unitID);
+if isempty(iUnit)
+    disp('no such unit');
+    return
+end
+
+plot_rasters = 0;
+plot_sdfs = 1;
+plot_direction = 1;
+plot_reward = 1;
+plot_coherence = 1;
+plot_CP = 1;
+
+%% PLOT RASTERS
+if plot_rasters == 1
+    plotrows = n_dotcoh * 2;
+    plotcols = 2;
+    for i_fig = 1:1
+        figUnit(iUnit).raster(i_fig) = figure;
+        rasteraxis = [];
+        for i_rewcont = 1:2
+            if i_fig==1
+                %   figure 1    align data on targets onset, no need to separate trials, marker
+                %               shows dots onset, sdf only for the shortest foreperiod,
+                %               sorted by dots onset
+                panel_tgton = subplot(1, 2, i_rewcont);
+                set(gca, 'YColor', color_rewcont(i_rewcont, :));
+                raster_tgt = []; marker = [];
+                ind_included = ind_rewcont(:,i_rewcont) & ( ind_correct | ind_err );
+                trials_included = find(ind_included);
+                dotson = alignTimes(trials_included,2) - alignTimes(trials_included,1);
+                raster_tgt = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), dotson, 1, timerange(1,1), timerange(1,2), panel_tgton, 'Target on', 0);
+                rasteraxis = [rasteraxis; axis(panel_tgton)];
+                title(txt_rewcont{i_rewcont});
+            else
+                for i_dir = 1:n_sacdir
+                    for i_coh = 1:n_dotcoh
+                        if dot_coh_unique(i_coh) == 0   % collaspe all coh =0 trials
+                            ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont);
+                        else
+                            switch flag
+                                case 0     %             include all finished trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont);
+                                case 1     %             include only correct trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont) & ind_correct;
+                                case -1    %             include only wrong choice trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont) & ind_err;
+                            end
+                        end
+                        trials_included = find(ind_included);
+                        switch i_fig
+                            case 2
+                                %   figure 2    align data on dots on, separate by dots coherence and direction, markers show sac onset
+                                %               sorted by sac onset
+                                ind_align = 2;
+                                marker_align = [3, 4]; n_markers = 2;
+                            case 3
+                                %   figure 3    align data on sac on, separate by dots coherence and direction, markers show dots onset and reward onset
+                                %               sorted by dots onset
+                                ind_align = 3;
+                                marker_align = [2, 4]; n_markers = 2;
+                            case 4
+                                %   figure 4    align data on rew on, separate by dots coherence and direction, markers show sac onset
+                                %               sorted by sac onset
+                                ind_align = 4;
+                                marker_align = 3; n_markers = 1;
+                        end
+                        markers = [];
+                        for j=1:n_markers
+                            markers =[markers alignTimes(trials_included, marker_align(j)) - alignTimes(trials_included, ind_align)];
+                        end
+                        i_temp = (i_coh * 2-1) + (i_dir-1) + n_dotcoh*2*(i_rewcont-1);
+                        panel = subplot(plotrows,plotcols, i_temp);
+                        set(gca, 'YColor', color_rewcont(i_rewcont, :));
+                        raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,ind_align), ...
+                            markers, 1, timerange(i_fig,1), timerange(i_fig,2), panel, '', 0 );
+                        raster_doton{i_coh, i_dir, i_rewcont} = raster_temp;
+                        rasteraxis = [rasteraxis; axis(panel)];
+                    end
+                end
+            end
+        end
+        if i_fig~=1
+            ymax = max(rasteraxis(:,4));
+            for i=1:plotrows*plotcols
+                subplot(plotrows, plotcols, i);
+                ylim([0 ymax]);
+            end
+        end
+        suptitle( char(common_text, [' Aligned on ' txt_fig{i_fig} ' onset']));
+    end
+end
+
+%% PLOT SPIKE DENSITY FUNCTIONS
+if plot_sdfs == 1
+    plotrows = 2;
+    plotcols = 2;
+    figUnit(iUnit).SDF = zeros(4,2,2);
+    for i_fig = 1:4
+        %         figUnit(iUnit).SDF(i_fig) = figure;
+        figure;
+        rasteraxis = [];
+        for i_rewcont = 1:2
+            if i_fig==1
+                %   figure 1    align data on targets onset, exclude data after dotson+50ms
+                hold on;
+                ind_included = ind_rewcont(:,i_rewcont) & ( ind_correct | ind_err );
+                trials_included = find(ind_included);
+                dotson = alignTimes(trials_included,2) - alignTimes(trials_included,1);
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), dotson, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0);
+                [tBin, SDF] = SpikeDensityFunction_exclude_LD(raster_temp(:,1), timerange(i_fig,1), timerange(i_fig,2), sigma, dotson, 50, 1);
+                plot(tBin, SDF, 'Color', color_rewcont(i_rewcont, :));
+                figUnit(iUnit).SDF(i_fig, i_rewcont, 1) = gca; figUnit(iUnit).SDF(i_fig, i_rewcont, 1) = gca;
+            else
+               for i_dir = 1:n_sacdir
+                    i_temp = i_dir + 2*(i_rewcont-1);
+                    panel = subplot(plotrows,plotcols, i_temp); hold on;
+                    figUnit(iUnit).SDF(i_fig, i_rewcont, i_dir) = panel;
+                    set(gca, 'YColor', color_rewcont(i_rewcont, :));
+                    for i_coh = 1:n_dotcoh
+                        if dot_coh_unique(i_coh) == 0   % collaspe all coh =0 trials
+                            ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont);
+                        else
+                            switch flag
+                                case 0     %             include all finished trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont);
+                                case 1     %             include only correct trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont) & ind_correct;
+                                case -1    %             include only wrong choice trials
+                                    ind_included = ind_coh(:, i_coh) & ind_sacdir(:,i_dir) & ind_rewcont(:,i_rewcont) & ind_err;
+                            end
+                        end
+                        trials_included = find(ind_included);
+                        switch i_fig
+                            case 2
+                                %   figure 2    align data on dots on, exclude spikes after 100ms before sac on 
+                                ind_align = 2;  marker_align = 3;
+                                exclude_time = -100; exclude_sign = 1;
+                            case 3
+                                %   figure 3    align data on sac on, exclude spikes before 200ms after dots on 
+                                ind_align = 3;  marker_align = 2;
+                                exclude_time = 200; exclude_sign = -1;
+                            case 4
+                                %   figure 4    align data on rew on, exclude spikes before 300ms after sac on 
+                                ind_align = 4;  marker_align = 3;
+                                exclude_time = 300; exclude_sign = -1;
+                        end
+                        markers = alignTimes(trials_included,marker_align) - alignTimes(trials_included,ind_align);
+                        raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,ind_align), ...
+                            markers, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+                        [tBin, SDF] = SpikeDensityFunction_exclude_LD(raster_temp(:,1), timerange(i_fig,1), timerange(i_fig,2), ...
+                            sigma, markers, exclude_time, exclude_sign);
+                        trunc = median(markers); 
+                        i0 = find(tBin==0);
+                        if exclude_sign>0
+                            trunc =min(trunc, tBin(end));
+                            plot(tBin(1:i0+trunc), SDF(1:i0+trunc), 'Color', cohcolor(dot_coh_unique(i_coh), i_dir-1));
+                        else
+                            trunc = max(trunc, tBin(1));
+                            plot(tBin(i0+trunc:end), SDF(i0+trunc:end), 'Color', cohcolor(dot_coh_unique(i_coh), i_dir-1));
+                        end
+                    end
+                    rasteraxis = [rasteraxis; axis(panel)];
+                    title(num2str(sacdir_unique(i_dir)));
+                end
+            end
+        end
+        if i_fig==1
+            temp = axis;
+            xlim([timerange(i_fig,1), timerange(i_fig,2)]);
+            plot([0 0], [0, temp(4)], 'k--');
+            ylim([0 temp(4)]);
+        else
+            ymax = max(rasteraxis(:,4));
+            for i=1:plotrows*plotcols
+                subplot(plotrows, plotcols, i);
+                plot([0 0], [0, ymax], 'k--');
+                ylim([0 ymax]);
+                xlim([timerange(i_fig,1), timerange(i_fig,2)]);
+            end
+        end
+        suptitle( char(common_text, [' Aligned on ' txt_fig{i_fig} ' onset']));
+    end
+end
+
+%% STATISTICAL COMPARISONS - DIRECTION SELECTIVITY
+% lump reward contingencies and coherences, use correct trials and non-zero coherences only
+if plot_direction == 1
+    plotrows = 2;
+    plotcols = 2;
+    for i_fig = 2:4
+        ind_included_dir1 = ind_sacdir(:,1) & ind_nonzerocoh & ind_correct;
+        ind_included_dir2 = ind_sacdir(:,2) & ind_nonzerocoh & ind_correct;
+        switch i_fig
+            case 2
+                %   figure 2    align data on dots on, exclude spikes after 100ms before sac on
+                ind_align = 2;  marker_align = 3;
+                exclude_time = -100; exclude_sign = 1;
+            case 3
+                %   figure 3    align data on sac on, exclude spikes before 200ms after dots on
+                ind_align = 3;  marker_align = 2;
+                exclude_time = 200; exclude_sign = -1;
+            case 4
+                %   figure 4    align data on rew on, exclude spikes before 300ms after sac on
+                ind_align = 4;  marker_align = 3;
+                exclude_time = 300; exclude_sign = -1;
+        end
+        
+        trials_included_dir1 = find(ind_included_dir1);
+        markers_dir1 = alignTimes(trials_included_dir1,marker_align) - alignTimes(trials_included_dir1,ind_align);
+        raster_temp_dir1 = plotRasterLDdots(data, trials_included_dir1, iUnit, alignTimes(trials_included_dir1,ind_align), ...
+            markers_dir1, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+
+        trials_included_dir2 = find(ind_included_dir2);
+        markers_dir2 = alignTimes(trials_included_dir2,marker_align) - alignTimes(trials_included_dir2,ind_align);
+        raster_temp_dir2 = plotRasterLDdots(data, trials_included_dir2, iUnit, alignTimes(trials_included_dir2,ind_align), ...
+            markers_dir2, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+        [tBin, p_values] = ttest_running_LD(raster_temp_dir1(:,1), raster_temp_dir2(:,1), timerange(i_fig,1), timerange(i_fig,2),...
+            timebin, slidestep, markers_dir1, markers_dir2, exclude_time, exclude_sign);
+        nBin = length(tBin); alpha = 0.05/nBin;
+        ind_dir1_larger = logical(p_values>0 & p_values<alpha);
+        ind_dir2_larger = logical(p_values<0 & p_values>-alpha);
+        for i_rewcont=1:2
+            for i_dir = 1:n_sacdir
+                axes(figUnit(iUnit).SDF(i_fig, i_rewcont, i_dir));
+                temp = axis;
+                sigMarker = temp(4)*.85 * ones(size(tBin));
+                plot(tBin(ind_dir1_larger), sigMarker(ind_dir1_larger), 'o', 'Color', cohcolor(dot_coh_unique(end), 0));
+                plot(tBin(ind_dir2_larger), sigMarker(ind_dir2_larger), 'o', 'Color', cohcolor(dot_coh_unique(end), 1));
+            end
+        end
+    end
+end
+
+%% STATISTICAL COMPARISONS - REWARD MODULATION
+% lump coherences, use correct trials and non-zero coherences only
+if plot_reward == 1
+    plotrows = 2;
+    plotcols = 2;
+    for i_fig = 1:4
+        if i_fig==1
+            ind_included = ind_rewcont(:,i_rewcont) & ( ind_correct | ind_err );
+            trials_included = find(ind_included);
+            dotson = alignTimes(trials_included,2) - alignTimes(trials_included,1);
+            raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,1), dotson, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0);
+            [tBin, SDF] = SpikeDensityFunction_exclude_LD(raster_temp(:,1), timerange(i_fig,1), timerange(i_fig,2), sigma, dotson, 50, 1);
+            plot(tBin, SDF, 'Color', color_rewcont(i_rewcont, :));
+            figUnit(iUnit).SDF(i_fig, i_rewcont, 1) = gca; figUnit(iUnit).SDF(i_fig, i_rewcont, 1) = gca;
+
+            ind_included_rew1 = ind_rewcont(:,1) & ( ind_correct | ind_err );
+            ind_included_rew2 = ind_rewcont(:,2) & ( ind_correct | ind_err );
+            ind_align = 1;  marker_align = 2;
+            exclude_time = 200; exclude_sign = 1;
+
+            trials_included1 = find(ind_included_rew1);
+            markers1 = alignTimes(trials_included1,marker_align) - alignTimes(trials_included1,ind_align);
+            raster_temp1 = plotRasterLDdots(data, trials_included1, iUnit, alignTimes(trials_included1,ind_align), ...
+                markers1, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+
+            trials_included2 = find(ind_included_rew2);
+            markers2 = alignTimes(trials_included2,marker_align) - alignTimes(trials_included2,ind_align);
+            raster_temp2 = plotRasterLDdots(data, trials_included2, iUnit, alignTimes(trials_included2,ind_align), ...
+                markers2, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+
+            [tBin, p_values] = ttest_running_LD(raster_temp1(:,1), raster_temp2(:,1), timerange(i_fig,1), timerange(i_fig,2),...
+                timebin, slidestep, markers1, markers2, exclude_time, exclude_sign);
+            nBin = length(tBin); alpha = 0.05/nBin;
+            ind_1_larger = logical(p_values>0 & p_values<alpha);
+            ind_2_larger = logical(p_values<0 & p_values>-alpha);
+            axes(figUnit(iUnit).SDF(i_fig, 1, 1));
+            temp = axis;
+            sigMarker = temp(4)*.90 * ones(size(tBin));
+            plot(tBin(ind_1_larger), sigMarker(ind_1_larger), 'go');
+            plot(tBin(ind_2_larger), sigMarker(ind_2_larger), 'gx');
+        else
+            switch i_fig
+                case 2
+                    %   figure 2    align data on dots on, exclude spikes after 100ms before sac on
+                    ind_align = 2;  marker_align = 3;
+                    exclude_time = -100; exclude_sign = 1;
+                case 3
+                    %   figure 3    align data on sac on, exclude spikes before 200ms after dots on
+                    ind_align = 3;  marker_align = 2;
+                    exclude_time = 200; exclude_sign = -1;
+                case 4
+                    %   figure 4    align data on rew on, exclude spikes before 300ms after sac on
+                    ind_align = 4;  marker_align = 3;
+                    exclude_time = 300; exclude_sign = -1;
+            end
+            for i_dir = 1:n_sacdir
+                ind_included_rew1 = ind_sacdir(:,i_dir) & ind_nonzerocoh & ind_correct & ind_rewcont(:,1);
+                ind_included_rew2 = ind_sacdir(:,i_dir) & ind_nonzerocoh & ind_correct & ind_rewcont(:,2);
+
+                trials_included1 = find(ind_included_rew1);
+                markers1 = alignTimes(trials_included1,marker_align) - alignTimes(trials_included1,ind_align);
+                raster_temp1 = plotRasterLDdots(data, trials_included1, iUnit, alignTimes(trials_included1,ind_align), ...
+                    markers1, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+
+                trials_included2 = find(ind_included_rew2);
+                markers2 = alignTimes(trials_included2,marker_align) - alignTimes(trials_included2,ind_align);
+                raster_temp2 = plotRasterLDdots(data, trials_included2, iUnit, alignTimes(trials_included2,ind_align), ...
+                    markers2, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+
+                [tBin, p_values] = ttest_running_LD(raster_temp1(:,1), raster_temp2(:,1), timerange(i_fig,1), timerange(i_fig,2),...
+                    timebin, slidestep, markers1, markers2, exclude_time, exclude_sign);
+                nBin = length(tBin); alpha = 0.05/nBin;
+                ind_1_larger = logical(p_values>0 & p_values<alpha);
+                ind_2_larger = logical(p_values<0 & p_values>-alpha);
+                axes(figUnit(iUnit).SDF(i_fig, 1, i_dir));
+                temp = axis;
+                sigMarker = temp(4)*.90 * ones(size(tBin));
+                plot(tBin(ind_1_larger), sigMarker(ind_1_larger), 'gx');
+                axes(figUnit(iUnit).SDF(i_fig, 2, i_dir));
+                temp = axis;
+                sigMarker = temp(4)*.90 * ones(size(tBin));
+                plot(tBin(ind_2_larger), sigMarker(ind_2_larger), 'gx');
+            end
+        end
+    end
+end
+
+%% STATISTICAL ANALYSIS - COHERENCE MODULATION
+if plot_coherence == 1
+    plotrows = 2;
+    plotcols = 2;
+    for i_fig = 2:4
+        switch i_fig
+            case 2
+                %   figure 2    align data on dots on, exclude spikes after 100ms before sac on
+                ind_align = 2;  marker_align = 3;
+                exclude_time = -100; exclude_sign = 1;
+                tStart = 0; tEnd = 800;
+            case 3
+                %   figure 3    align data on sac on, exclude spikes before 200ms after dots on
+                ind_align = 3;  marker_align = 2;
+                exclude_time = 200; exclude_sign = -1;
+                tStart= -500; tEnd = 500;
+            case 4
+                %   figure 4    align data on rew on, exclude spikes before 300ms after sac on
+                ind_align = 4;  marker_align = 3;
+                exclude_time = 300; exclude_sign = -1;
+                tStart = -500; tEnd = 500;
+        end
+        for i_rewcont = 1:2
+            for i_dir = 1:n_sacdir
+                ind_included = ind_sacdir(:,i_dir) & ind_correct & ind_rewcont(:,i_rewcont) ;
+                trials_included = find(ind_included);
+                markers = alignTimes(trials_included,marker_align) - alignTimes(trials_included,ind_align);
+                raster_temp = plotRasterLDdots(data, trials_included, iUnit, alignTimes(trials_included,ind_align), ...
+                    markers, 1, tStart, tEnd, [], '', 0 );
+                %   set up regressors
+                coherence = conditions(trials_included, 3);
+%                 rt = alignTimes(trials_included, 3) - alignTimes(trials_included, 2);
+%                 rt = rt /1000.0;
+%                 regressors = [ones(size(coherence)) coherence rt];
+%                 n = size(regressors,2);
+%                 regnames = {'base', 'coherence' ,'rt'};
+                regressorcoh = [ones(size(coherence)) coherence];
+                regnames = {'base', 'coherence'};
+               
+                [tBin, b_out, bint_out] = regressMultiFactor_exclude_LD(raster_temp, regressorcoh, regnames, ...
+                    timebin, slidestep, tStart, tEnd, markers, exclude_time, exclude_sign, [], []);
+                b_coh = b_out(:,2); bint = bint_out(:,3).* bint_out(:,4);
+                ind_pos = logical(b_coh>0 & bint>0);
+                ind_neg = logical(b_coh<0 & bint>0);
+                axes(figUnit(iUnit).SDF(i_fig, i_rewcont, i_dir));
+                temp = axis;
+                sigMarker = temp(4)*.95 * ones(size(tBin));
+                plot(tBin(ind_pos), sigMarker(ind_pos), 'co');
+                plot(tBin(ind_neg), sigMarker(ind_neg), 'ko');
+                plot(tBin(~ind_pos&~ind_neg), sigMarker(~ind_pos&~ind_neg), '.', 'Color',[0.5 0.5 0.5]);
+             end
+        end
+    end
+end
+
+%% STATISTICAL ANALYSIS - CHOICE PROBABILITY
+% only for activity from dots-500 to dots+200, check direction selectivity
+% of activity from dots+200 to sac+200 in zero-coherence trials
+if ( plot_CP == 1 & dot_coh_unique(1)==0 )
+    plotrows = 2;
+    plotcols = 2;
+    i_fig = 2;
+    for i_rewcont = 1:2
+        ind_align = 2; marker_align = 3;
+        exclude_time = 200; exclude_sign = 1;
+        ind_included_dir1 = ind_sacdir(:,1) & ind_coh(:,1) & ind_rewcont(:,i_rewcont);
+        ind_included_dir2 = ind_sacdir(:,2) & ind_coh(:,1) & ind_rewcont(:,i_rewcont);
+        trials_included_dir1 = find(ind_included_dir1);
+        markers_dir1 = alignTimes(trials_included_dir1,marker_align) - alignTimes(trials_included_dir1,ind_align);
+        raster_temp_dir1 = plotRasterLDdots(data, trials_included_dir1, iUnit, alignTimes(trials_included_dir1,ind_align), ...
+            markers_dir1, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+        trials_included_dir2 = find(ind_included_dir2);
+        markers_dir2 = alignTimes(trials_included_dir2,marker_align) - alignTimes(trials_included_dir2,ind_align);
+        raster_temp_dir2 = plotRasterLDdots(data, trials_included_dir2, iUnit, alignTimes(trials_included_dir2,ind_align), ...
+            markers_dir2, 1, timerange(i_fig,1), timerange(i_fig,2), [], '', 0 );
+        tEnd = min([median(markers_dir1) median(markers_dir2)])+100;
+        [tBin, p_values] = ttest_running_LD(raster_temp_dir1(:,1), raster_temp_dir2(:,1), -500, tEnd, tEnd+400, 200, markers_dir1, markers_dir2, exclude_time, exclude_sign);
+        p = 0;
+        if p_values>0 & p_values<0.05
+            raster_temp_dir1 = plotRasterLDdots(data, trials_included_dir1, iUnit, alignTimes(trials_included_dir1,ind_align), ...
+                markers_dir1, 1, -500, 200, [], '', 0 );
+            raster_temp_dir2 = plotRasterLDdots(data, trials_included_dir2, iUnit, alignTimes(trials_included_dir2,ind_align), ...
+                markers_dir2, 1, -500, 200, [], '', 0 );
+            temp = raster_temp_dir1(:,1);
+            trialbreaks = [1; find(temp==-10000)];
+            sp1 = diff(trialbreaks);
+            temp = raster_temp_dir2(:,1);
+            trialbreaks = [1; find(temp==-10000)];
+            sp2 = diff(trialbreaks);
+            [roc0, p] = rocshuf(sp1,sp2,1000);
+            if p<0.05
+                axes(figUnit(iUnit).SDF(i_fig, i_rewcont, 1));
+                temp = axis;
+                plot([-500 200], [temp(4)* 0.97 temp(4)*0.97], 'm-');
+            end
+        elseif p_values<0 & p_values>-0.05
+            raster_temp_dir2 = plotRasterLDdots(data, trials_included_dir1, iUnit, alignTimes(trials_included_dir1,ind_align), ...
+                markers_dir1, 1, -500, 200, [], '', 0 );
+            raster_temp_dir1 = plotRasterLDdots(data, trials_included_dir2, iUnit, alignTimes(trials_included_dir2,ind_align), ...
+                markers_dir2, 1, -500, 200, [], '', 0 );
+            temp = raster_temp_dir1(:,1);
+            trialbreaks = [1; find(temp==-10000)];
+            sp1 = diff(trialbreaks);
+            temp = raster_temp_dir2(:,1);
+            trialbreaks = [1; find(temp==-10000)];
+            sp2 = diff(trialbreaks);
+            [roc0, p] = rocshuf(sp1,sp2,1000);
+            if p<0.05
+                axes(figUnit(iUnit).SDF(i_fig, i_rewcont, 2));
+                temp = axis;
+                plot([-500 200], [temp(4)* 0.97 temp(4)*0.97], 'm-');
+            end
+        end
+        
+    end
+        
+end      
+
+
+% --------------------------------------------------------------------
+function mnuBehavior_dotsRT_1DR_Callback(hObject, eventdata, handles)
+
+    [fname, pathname] = uigetfile({'*.mat';'*.*'}, ...
+        'Pick a file');
+    if (fname~=0)
+        fullname = [pathname fname];
+        load(fullname);
+    else
+        return;
+    end
+    flag = 0; plotflag = 1;
+    fits = Behavior_dotsRT_1DR(data, flag, plotflag);

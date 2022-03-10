@@ -13,7 +13,7 @@ addpath 'C:\Users\alice\Documents\Projects\ODRHazardTask\FileConversion'
 
 
 
-for currentFile = nfiles
+for currentFile = nfiles-39:nfiles-22
     %(responses within this many degree of target are considered a response, rest are NaN)
     ResponseCutoff=30;
     theFile= files(currentFile).name;
