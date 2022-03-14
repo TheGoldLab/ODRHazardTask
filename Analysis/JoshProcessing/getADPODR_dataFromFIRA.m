@@ -1,20 +1,21 @@
-function data_ = getADPODR_dataFromFIRA(fileName)
+function data_ = getADPODR_dataFromFIRA(fileName, convertedDataPath)
 %
-% Get data for behavioral analyses
-global FIRA
 
 % Get the file and put it in the global FIRA data struct so we can use 
 %   the FIRA utilities
-BoxLocal = 'C:/Users/alice'; %Alice PC
-FileLoc = '/Box/GoldLab/Data/Physiology/AODR/Converted';
-if nargin < 1 || isempty(fileName)    
-    fileName = [BoxLocal FileLoc '/MM_2022_02_22_5_44-sort01-3units'];
+arguments
+    fileName = 'MM_2022_02_22_5_44-sort01-3units';
+    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted';
 end
-[~, fn] = fileparts(fileName);
-openFIRA(fileName);
 
-%% Collect data from FIRA and put into a struct:
-data_ = struct('fileName', fn, 'ecodes', [], 'timing', [], 'spikes', {{}});
+% Below we extract data directly from the global FIRA struct
+global FIRA
+
+% Open the file
+openFIRA(fullfile(convertedDataPath, fileName));
+
+% Collect data from FIRA and put into a struct
+data_ = struct('fileName', fileName, 'ecodes', [], 'timing', [], 'spikes', {{}});
 
 % Use all non-broken fixation trials
 score = getFIRA_ec([], 'score');
@@ -34,14 +35,14 @@ ecodeNames = {          ...
     'score',            ... % 0=err, 1=correct, -3=sample, -1=ncerr
     'choice',           ... % 1=T1, 2=T2
     'RT',               ...
-    'sac_endx',         ... % saccade end x
-    'sac_endy',         ... % saccade end y
-    't1_x',             ... % Target 1 x
-    't1_y',             ... % Target 1 y
-    't2_x',             ... % Target 2 x
-    't2_y',             ... % Target 2 y
-    'sample_x',         ... % Sample x
-    'sample_y',         ... % Sample y
+    'sac_endx',         ... 
+    'sac_endy',         ... 
+    't1_x',             ...
+    't1_y',             ...
+    't2_x',             ...
+    't2_y',             ...
+    'sample_x',         ...
+    'sample_y',         ... 
     };
 for nn = 1:length(ecodeNames)
     data_.ecodes.(ecodeNames{nn}) = getFIRA_ec(Lgood, ecodeNames{nn});
@@ -92,7 +93,7 @@ data_.ecodes.choice_switch(~ismember(data_.ecodes.choice, [1 2]) | ...
 OLscore = getFIRA_ec(Lgood, 'online_score'); % get "on-line" scores
 data_.ecodes.previous_reward = [0; OLscore(1:end-1)==1];
 
-%  23. Correct Target Shown? 0=no, 1=yes
+%  Correct Target Shown? 0=no, 1=yes
 mean_on = getFIRA_ec(Lgood, 'mean_on');
 target_off = getFIRA_ec(Lgood, 'target_off');
 data_.ecodes.correct_shown = ~isnan(mean_on) & (mean_on < target_off);

@@ -1,5 +1,5 @@
-function spmADPODR4(func)
-% function spmLDdots(func)
+function spmADPODR5(func)
+% function spmADPODR5(func)
 %
 % File describing how to interpret data for FIRA
 % Use input argument "func" to switch functions:
@@ -211,8 +211,25 @@ elseif strcmp(func, 'trial')
             setFIRA_ec(tti, 'sac_angle', ang_deg(sacs(1,5), sacs(1,6)));
             setFIRA_ec(tti, 'sac_amp',  sacs(1,7));
             
-            % For memory & visual & ring task, parse outcome
-            if any(task_id == 2:5)
+            % Defaults for checking saccade accuracy
+            MIN_SACCADE_AMPLITUDE = 5;
+            MAX_SACCADE_AMPLITUDE = 18;
+            MAX_ANGULAR_DISTANCE  = 22;
+            setFIRA_ec(tti, 'score', -1); % Default -- no choice
+            amp = sqrt(getFIRA_ec(tti, 'sac_endx')^2 + getFIRA_ec(tti, 'sac_endy')^2 );
+            ang = getFIRA_ec(tti, 'sac_angle');
+
+            % memory task
+            if task_id==1
+                
+                % Report correct trial
+                if (amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE) && ...
+                        (ang_diff(ang, getFIRA_ec(tti, 't1_angle')) < MAX_ANGULAR_DISTANCE)
+                    setFIRA_ec(tti, 'score', 1); % Correct!
+                end
+                
+            % For ADPODR, parse outcome
+            elseif any(task_id == 2:5)
 
                 % Set correct/error target, LLR
                 trial_id = getFIRA_ec(tti, 'trial_id')-100*task_id;                
@@ -220,7 +237,8 @@ elseif strcmp(func, 'trial')
                 % Hard-coding LLR values
                 % task_adaptiveODR3.c "Task Info" menu has P1-P9, which
                 %   corresponds to the probability of showing the cue 
-                %   at locations 1 (
+                %   at locations far from (P1) or close to (P9) the true
+                %   target
                 [~,N] = fileparts(FIRA.header.filename{1});
                 if strncmp(N, 'Ci', 2) % Cicero
                     if task_id == 2
@@ -251,13 +269,7 @@ elseif strcmp(func, 'trial')
                 %    task_id, getFIRA_ec(tti, 'trial_id'), getFIRA_ec(tti, 'llr'))
 
                 % Check for good saccade based on length and angle
-                setFIRA_ec(tti, 'score', -1); % Default -- no choice
-                amp = sqrt(getFIRA_ec(tti, 'sac_endx')^2 + getFIRA_ec(tti, 'sac_endy')^2 );
-                ang = getFIRA_ec(tti, 'sac_angle');
                 % if amp > 2.5 && amp < 12
-                MIN_SACCADE_AMPLITUDE = 5;
-                MAX_SACCADE_AMPLITUDE = 18;
-                MAX_ANGULAR_DISTANCE  = 22;
                 if amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE
                     if ang_diff(ang, correctTargetAngle) < MAX_ANGULAR_DISTANCE
                         setFIRA_ec(tti, 'score', 1); % Correct!
