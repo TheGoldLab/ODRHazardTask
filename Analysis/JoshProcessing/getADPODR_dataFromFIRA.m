@@ -4,8 +4,8 @@ function data_ = getADPODR_dataFromFIRA(fileName, convertedDataPath)
 % Get the file and put it in the global FIRA data struct so we can use 
 %   the FIRA utilities
 arguments
-    fileName = 'MM_2022_02_22_5_44-sort01-3units';
-    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted';
+    fileName = 'MM_2022_02_22_5_44-sort01-3units.mat';
+    convertedDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/SortedConverted';
 end
 
 % Below we extract data directly from the global FIRA struct

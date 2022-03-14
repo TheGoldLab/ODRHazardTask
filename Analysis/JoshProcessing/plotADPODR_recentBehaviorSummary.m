@@ -6,8 +6,10 @@ function plotADPODR_recentBehaviorSummary(monk, sessions, rawDataPath, converted
 arguments
     monk = 'MM';
     sessions = 5;
-    rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Sorted';
-    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted';
+    rawDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/Sorted';
+    convertedDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/SortedConverted';
+%     rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Sorted';
+%     convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Converted';
 end
 
 % Check for raw files
@@ -60,7 +62,7 @@ for ii = 1:numSessions
     end
     
     % Call plot function with appropriate axes
-    plotADPODR_sessionBehavior(fileName, axs((ii-1)*3+(1:3)));    
+    plotADPODR_sessionBehavior([fileName '.mat'], axs((ii-1)*3+(1:3)));    
 end
 
     
