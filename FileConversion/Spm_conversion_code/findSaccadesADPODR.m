@@ -27,9 +27,9 @@ sacs_ = [];
 
 % USER-DEFINED PARAMETERS
 D_MIN  = 0.2;   % minimum distance of a sacccade (deg)
-VP_MIN = 0.08;  % 0.12 minimum peak velocity of a saccade (deg/ms)
-VI_MIN = 0.04;  % minimum instantaneous velocity of a saccade (deg/ms)
-A_MIN  = 0.005; % minimum instantaneous acceleration of a saccade
+VP_MIN = 0.08;  % minimum peak velocity of a saccade (deg/ms)
+VI_MIN = 0.03;  % minimum instantaneous velocity of a saccade (deg/ms)
+A_MIN  = 0.004; % minimum instantaneous acceleration of a saccade
 
 % for smoothing
 smf   = [0.0033 0.0238 0.0971 0.2259 0.2998 0.2259 0.0971 0.0238 0.0033];

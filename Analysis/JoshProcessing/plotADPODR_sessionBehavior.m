@@ -1,5 +1,5 @@
-function plotADPODR_sessionBehavior(fileName, axs)
-% function plotADPODR_sessionBehavior(fileName, axs)
+function plotADPODR_sessionBehavior(fileName, monkey, behaviorOnly, axs)
+% function plotADPODR_sessionBehavior(fileName, monkey, behaviorOnly, axs)
 
 %% Get data
 % ecode names are:
@@ -9,16 +9,18 @@ function plotADPODR_sessionBehavior(fileName, axs)
 %   previous_reward, correct_shown
 arguments
     fileName = [];
+    monkey = [];
+    behaviorOnly = true;
     axs = [];
 end
-data = getADPODR_dataFromFIRA(fileName);
+data = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly);
 
 %% Set up figure
 %
 if isempty(axs)
-    wid       = 15; % total width
-    hts       = 4.5.*ones(1,4);
-    cols      = {1,2,1,2};
+    wid     = 15; % total width
+    hts     = 4.5.*ones(1,4);
+    cols    = {1,2,1,2};
     [axs,~] = getPLOT_axes(1, wid, hts, cols, 2.2, [], [], 'ADPODR', true);
     set(axs,'Units','normalized');
 end
@@ -50,6 +52,13 @@ Lc1   = data.ecodes.choice==1;
 Lc2   = data.ecodes.choice==2;
 Ltask = data.ecodes.task_id>=2;
 Lgood = Ltask & data.ecodes.score>=0;
+if ~any(Lgood)
+    axes(axs(1)); 
+    title(sprintf('%s: %d trials', strrep(data.fileName, '_', '-'), sum(Lgood)))
+    fprintf('%s: NO TRIALS', data.fileName)
+    return
+end
+    
 % For each cue location
 for ll = 1:numCues
     Lcue = Lgood & sCues==cues(ll);
@@ -82,8 +91,9 @@ co = {[4 94 167]./255, [194 0 77]./255};
 % First get logistic fit
 %   input matrix is h1_bias, h2_bias, llr for switch, choice switch
 ldat = cat(2, zeros(sum(Lgood), 2), sCues(Lgood), data.ecodes.choice_switch(Lgood));
-ldat(data.ecodes.hazard(Lgood)==hazards(1), 1) = 1;
-ldat(data.ecodes.hazard(Lgood)==hazards(2), 2) = 1;
+for hh = 1:numHazards
+    ldat(data.ecodes.hazard(Lgood)==hazards(hh), hh) = 1;
+end
 ldat = ldat(isfinite(ldat(:,4)),:);
 fits = logist_fit(ldat, 'lu1');
 
@@ -115,7 +125,7 @@ if isfinite(axs(1))
     axis([-4 4 0 100]);
     xlabel('Cue location(-=stay, +=switch)')
     ylabel('Prob(switch)');
-    title(strrep(data.fileName, '_', '-'))
+    title(sprintf('%s: %d trials', strrep(data.fileName, '_', '-'), sum(Lgood)))
     set(gca,'FontSize', fontSize);
 end
 
@@ -171,7 +181,7 @@ if length(axs)>2 && isfinite(axs(2)) && isfinite(axs(3))
         axes(axs(1+vv)); cla reset; hold on;
         plot(trials([1 end]), [0.5 0.5], 'k:');
         % For each hazard
-        for hh = 1:2
+        for hh = 1:numHazards
             Lh = hazardArr==hazards(hh);
             % points are actual, lines are expected
             % plot([trials(Lh) trials(Lh)]', rmdat(Lh,(vv-1)*2+(1:2))', '-', 'Color', co{hh});
@@ -200,17 +210,20 @@ if length(axs)>=4 && isfinite(axs(4))
         for hh = 1:numHazards
             % Plot error bars, means
             Lg = pdat(:,cc+1,hh,2)>=MIN_N;
-            xs = cues(Lg);
-            ys = pdat(Lg,cc+1,hh,1);
-            es = pdat(Lg,cc+1,hh,3);
-            plot([xs xs]', [ys-es ys+es]', '-', 'Color', co{hh});
-            hs((cc-1)*2+hh) = plot(xs, ys, lst{cc}, 'MarkerSize', 10, ...
-                'Color', co{hh}, 'MarkerFaceColor', co{hh});
-            leg{(cc-1)*2+hh} = sprintf('T%d, H=%.2f', cc, hazards(hh));
+            if any(Lg)
+                xs = cues(Lg);
+                ys = pdat(Lg,cc+1,hh,1);
+                es = pdat(Lg,cc+1,hh,3);
+                plot([xs xs]', [ys-es ys+es]', '-', 'Color', co{hh});
+                hs((cc-1)*2+hh) = plot(xs, ys, lst{cc}, 'MarkerSize', 10, ...
+                    'Color', co{hh}, 'MarkerFaceColor', co{hh});
+                leg{(cc-1)*2+hh} = sprintf('T%d, H=%.2f', cc, hazards(hh));
+            end
         end
     end
-    legend(hs, leg{:});
-    axis([-4 4 150 400]);
+    legend(hs(isfinite(hs)), leg(isfinite(hs)));
+    vals = reshape(pdat(Lg,2:3,:,1),[],1);
+    axis([-4 4 min(vals)-50, max(vals)+50]);
     set(gca,'FontSize', fontSize);
     ylabel('RT (ms)')
     title('RT by choice and hazard')

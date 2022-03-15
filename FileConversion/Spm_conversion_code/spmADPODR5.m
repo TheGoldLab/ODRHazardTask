@@ -72,7 +72,7 @@ if strcmp(func, 'init')
         
         % Codes about Timing of task:
         'fp_on'             'time'      @getEC_time     {EC.FPONCD      1}; ...  %FP on
-        'ring_on'           'time'      @getEC_time     {EC.RINGON      1};...        
+        'ring_on'           'time'      @getEC_time     {EC.RINGON      1};...
         'sample_on'         'time'      @getEC_time     {EC.TRGC1CD     1}; ...   %sample on
         'mean_on'           'time'      @getEC_time     {EC.TARGONCD    1}; ...
         'target_off'        'time'      @getEC_time     {EC.TARGOFFCD   1}; ...
@@ -150,29 +150,77 @@ elseif strcmp(func, 'trial')
     tti = FIRA.raw.trial.good_count;
     task_id = getFIRA_ec(tti, 'task_id');
     
-    % Check 
+    % Check
     if task_id>=1
         sfixoff='fp_off';
     else
         sfixoff='';
     end
-        
+    
     % parse saccades
     if ~isempty(sfixoff)
         
         % inline functions to compute angles, distances in deg from xy
-        ang_deg  = @(x,y) mod(atan2(y,x)*180/pi+360,360);        
+        ang_deg  = @(x,y) mod(atan2(y,x)*180/pi+360,360);
         ang_diff = @(x,y) abs(rad2deg(angdiff(deg2rad(x),deg2rad(y))));
-        % dst_deg = @(x,y) sqrt(x^2 + y^2);
         
         % Set t1/t2/sample angles
         setFIRA_ec(tti, 't1_angle', ang_deg(getFIRA_ec(tti, 't1_x'), getFIRA_ec(tti, 't1_y')));
         setFIRA_ec(tti, 't2_angle', ang_deg(getFIRA_ec(tti, 't2_x'), getFIRA_ec(tti, 't2_y')));
-        if task_id > 1
+        
+        if task_id == 1
+            
+            % For MSAC, set target
+            correctTargetAngle = getFIRA_ec(tti, 't1_angle');
+            setFIRA_ec(tti, 'correct_target', 1);
+
+        elseif any(task_id == 2:5)
+            
+            % For ADPODR, figure out sample angle, correct/error target, LLR
+            % set sample angle
             setFIRA_ec(tti, 'sample_angle', ang_deg(getFIRA_ec(tti, 'sample_x'), getFIRA_ec(tti, 'sample_y')));
+            
+            % parse trial id
+            trial_id = getFIRA_ec(tti, 'trial_id')-100*task_id;
+            
+            % Parse LLR
+            % task_adaptiveODR3.c "Task Info" menu has P1-P9, which
+            %   corresponds to the probability of showing the cue
+            %   at locations far from (P1) or close to (P9) the true
+            %   target
+            llr_id = mod(trial_id, 9); % 0-8 for T1/T2, used below
+            [~,N] = fileparts(FIRA.header.filename{1});
+            if strncmp(N, 'Ci', 2) % Cicero
+                if task_id == 2
+                    % ORDER: P1->P9
+                    ps = [0.0 0.05 0.10 0.10 0.15 0.15 0.20 0.15 0.10];
+                else
+                    ps = [0.0 0.05 0.10 0.10 0.15 0.15 0.20 0.15 0.10];
+                end
+            else % Default MrM
+                ps = [0.0 0.0 0.0 0.10 0.20 0.30 0.15 0.15 0.10];
+            end
+            
+            if trial_id < 9 % T1 is correct
+                correctTargetAngle = getFIRA_ec(tti, 't1_angle');
+                errorTargetAngle = getFIRA_ec(tti, 't2_angle');
+                setFIRA_ec(tti, 'correct_target', 1);
+                setFIRA_ec(tti, 'sample_id', llr_id-4);
+                setFIRA_ec(tti, 'llr', log10(ps(llr_id+1)) - log10(ps(end-llr_id)));
+            else % T2 is correct
+                correctTargetAngle = getFIRA_ec(tti, 't2_angle');
+                errorTargetAngle = getFIRA_ec(tti, 't1_angle');
+                setFIRA_ec(tti, 'correct_target', 2);
+                setFIRA_ec(tti, 'sample_id', -(llr_id-4));
+                setFIRA_ec(tti, 'llr', log10(ps(end-llr_id)) - log10(ps(llr_id+1)));
+            end
+            
         end
         
         % Get and parse saccades
+        % sacs columns are:
+        %   1. latency; 2. duration; 3. max velocity; 4. peak velocity
+        %   5. end x; 6. end y; 7. raw amplitude; 8. vector amplitude
         [sacs, bf] = getFIRA_saccadesPerTrial(tti, 'fpoff', 'fp_off', 'saccadeParser', @findSaccadesADPODR);
         
         if bf
@@ -182,115 +230,79 @@ elseif strcmp(func, 'trial')
             % ncerr
             setFIRA_ec(tti, 'score', -1);
         else
-            
-            % Found saccade, parse and store stats
+            % Loop through the sacs, find the most appropriate choice
+            % Set some defaults for checking saccade
+            MIN_SACCADE_AMPLITUDE = 5;
+            MAX_SACCADE_AMPLITUDE = 18;
+            MAX_ANGULAR_DISTANCE  = 25;
             sacs = sacs(isfinite(sacs(:,1)),:);
-            nSacs = size(sacs, 1);
-            
-            % Check for small, early saccade that seems to happen
-            % sometimes
-            if nSacs > 1 && sacs(1,1) < 500 && sacs(1,7) < 3
-                sacs(1,:) = [];
-                nSacs = nSacs - 1;
+            if ~isempty(sacs)
+                targAcq = getFIRA_ec(tti, 'targ_acq') - getFIRA_ec(tti, 'fp_off');
+                sacs(sacs(:,1)>targAcq,:) = [];
             end
-            
-            % Check for very quick second saccade, use if less<threshold
-            while nSacs > 1 && sacs(2,1) < (sacs(1,1)+sacs(1,2)+30)
-                sacs(2,1) = sacs(1,1);
-                sacs(2,2) = sacs(2,1)-sacs(1,1)+sacs(2,2);
+            savedSac = [];
+            score = -1; % default: no choice
+            while score < 0 && ~isempty(sacs)
+                
+                % Get amp, angle of current saccade
+                amp = sqrt(sacs(1,5).^2 + sacs(1,6).^2);
+                ang = ang_deg(sacs(1,5), sacs(1,6));
+                
+                if task_id==1
+                    
+                    % Memory task
+                    % Report correct trial
+                    if (amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE) && ...
+                            (ang_diff(ang, getFIRA_ec(tti, 't1_angle')) < MAX_ANGULAR_DISTANCE)
+                        score = 1;
+                    end
+                else
+                    
+                    % ADPODR, parse outcome
+                    %fprintf('task id=%d, trial id=%d, llr=%.2f\n', ...
+                    %    task_id, getFIRA_ec(tti, 'trial_id'), getFIRA_ec(tti, 'llr'))
+                    % Check for good saccade based on length and angle
+                    if amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE
+                        if ang_diff(ang, correctTargetAngle) < MAX_ANGULAR_DISTANCE
+                            score = 1; % Correct!
+                        elseif ang_diff(ang, errorTargetAngle) < MAX_ANGULAR_DISTANCE
+                            score = 0; % Error!
+                        elseif ang_diff(ang, getFIRA_ec(tti, 'sample_angle')) < MAX_ANGULAR_DISTANCE
+                            score = -3; % Cue!
+                        end
+                    end
+                end
+                
+                % Save sac
+                if size(sacs,1)==1 || ismember(score, [-3 0 1])
+                    savedSac = [sacs(1, [1 2 3 5 6]) ang amp];
+                end
                 sacs(1,:) = [];
-                nSacs = nSacs - 1;
             end
             
             % Store saccade stats
-            setFIRA_ec(tti, 'RT',  sacs(1,1));
-            setFIRA_ec(tti, 'sac_dur',  sacs(1,2));
-            setFIRA_ec(tti, 'sac_vmax', sacs(1,3));
-            setFIRA_ec(tti, 'sac_endx', sacs(1,5));
-            setFIRA_ec(tti, 'sac_endy', sacs(1,6));
-            setFIRA_ec(tti, 'sac_angle', ang_deg(sacs(1,5), sacs(1,6)));
-            setFIRA_ec(tti, 'sac_amp',  sacs(1,7));
+            if ~isempty(savedSac)
+                setFIRA_ec(tti, 'RT',        savedSac(1));
+                setFIRA_ec(tti, 'sac_dur',   savedSac(2));
+                setFIRA_ec(tti, 'sac_vmax',  savedSac(3));
+                setFIRA_ec(tti, 'sac_endx',  savedSac(4));
+                setFIRA_ec(tti, 'sac_endy',  savedSac(5));
+                setFIRA_ec(tti, 'sac_angle', savedSac(6));
+                setFIRA_ec(tti, 'sac_amp',   savedSac(7));
+            end
             
-            % Defaults for checking saccade accuracy
-            MIN_SACCADE_AMPLITUDE = 5;
-            MAX_SACCADE_AMPLITUDE = 18;
-            MAX_ANGULAR_DISTANCE  = 22;
-            setFIRA_ec(tti, 'score', -1); % Default -- no choice
-            amp = sqrt(getFIRA_ec(tti, 'sac_endx')^2 + getFIRA_ec(tti, 'sac_endy')^2 );
-            ang = getFIRA_ec(tti, 'sac_angle');
-
-            % memory task
-            if task_id==1
-                
-                % Report correct trial
-                if (amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE) && ...
-                        (ang_diff(ang, getFIRA_ec(tti, 't1_angle')) < MAX_ANGULAR_DISTANCE)
-                    setFIRA_ec(tti, 'score', 1); % Correct!
+            % Save the score and choice
+            setFIRA_ec(tti, 'score', score);
+            if task_id > 1
+                if score < 0 || score > 1
+                    setFIRA_ec(tti, 'choice', 0);
+                elseif (score == 1 && correctTargetAngle==getFIRA_ec(tti, 't1_angle')) || ...
+                        (score == 0 && errorTargetAngle==getFIRA_ec(tti, 't1_angle'))
+                    setFIRA_ec(tti, 'choice', 1)
+                else
+                    setFIRA_ec(tti, 'choice', 2)
                 end
-                
-            % For ADPODR, parse outcome
-            elseif any(task_id == 2:5)
-
-                % Set correct/error target, LLR
-                trial_id = getFIRA_ec(tti, 'trial_id')-100*task_id;                
-                llr_id   = mod(trial_id, 9); % 0-8 for T1/T2, used below
-                % Hard-coding LLR values
-                % task_adaptiveODR3.c "Task Info" menu has P1-P9, which
-                %   corresponds to the probability of showing the cue 
-                %   at locations far from (P1) or close to (P9) the true
-                %   target
-                [~,N] = fileparts(FIRA.header.filename{1});
-                if strncmp(N, 'Ci', 2) % Cicero
-                    if task_id == 2
-                        % ORDER: P1->P9
-                        ps = [0.0 0.05 0.10 0.10 0.15 0.15 0.20 0.15 0.10];
-                    else
-                        ps = [0.0 0.05 0.10 0.10 0.15 0.15 0.20 0.15 0.10];
-                    end
-                else % Default MrM
-                    ps = [0.0 0.0 0.0 0.10 0.20 0.30 0.15 0.15 0.10];
-                end
-                
-                if trial_id < 9 % T1 is correct
-                    correctTargetAngle = getFIRA_ec(tti, 't1_angle');
-                    errorTargetAngle = getFIRA_ec(tti, 't2_angle');
-                    setFIRA_ec(tti, 'correct_target', 1);
-                    setFIRA_ec(tti, 'sample_id', llr_id-4);
-                    setFIRA_ec(tti, 'llr', log10(ps(llr_id+1)) - log10(ps(end-llr_id)));
-                else % T2 is correct
-                    correctTargetAngle = getFIRA_ec(tti, 't2_angle');
-                    errorTargetAngle = getFIRA_ec(tti, 't1_angle');
-                    setFIRA_ec(tti, 'correct_target', 2);
-                    setFIRA_ec(tti, 'sample_id', -(llr_id-4));
-                    setFIRA_ec(tti, 'llr', log10(ps(end-llr_id)) - log10(ps(llr_id+1)));
-                end
-                                
-                %fprintf('task id=%d, trial id=%d, llr=%.2f\n', ...
-                %    task_id, getFIRA_ec(tti, 'trial_id'), getFIRA_ec(tti, 'llr'))
-
-                % Check for good saccade based on length and angle
-                % if amp > 2.5 && amp < 12
-                if amp > MIN_SACCADE_AMPLITUDE && amp < MAX_SACCADE_AMPLITUDE
-                    if ang_diff(ang, correctTargetAngle) < MAX_ANGULAR_DISTANCE
-                        setFIRA_ec(tti, 'score', 1); % Correct!
-                    elseif ang_diff(ang, errorTargetAngle) < MAX_ANGULAR_DISTANCE
-                        setFIRA_ec(tti, 'score', 0); % Error!
-                    elseif ang_diff(ang, getFIRA_ec(tti, 'sample_angle')) < MAX_ANGULAR_DISTANCE
-                        setFIRA_ec(tti, 'score', -3); % Cue!
-                    end
-                    
-                    % Save the choice
-                    score = getFIRA_ec(tti, 'score');
-                    if score < 0 || score > 1
-                        setFIRA_ec(tti, 'choice', 0);
-                    elseif (score == 1 && correctTargetAngle==getFIRA_ec(tti, 't1_angle')) || ...
-                            (score == 0 && errorTargetAngle==getFIRA_ec(tti, 't1_angle'))
-                        setFIRA_ec(tti, 'choice', 1)
-                    else
-                        setFIRA_ec(tti, 'choice', 2)
-                    end
-                end
-                
+            
                 % PLOTZ -- set to true to see trial-by-trial eye
                 % positions
                 if false % getFIRA_ec(tti, 'score') == -3
@@ -307,31 +319,40 @@ elseif strcmp(func, 'trial')
                         TeY = getFIRA_ec(tti, 't1_y');
                     end
                     axsz = 15;
-                    co = {'b' 'm' 'k'};
                     xsr = FIRA.analog.data(tti, 2).values;
-                    ysr = FIRA.analog.data(tti, 3).values;
-
+                    ysr = FIRA.analog.data(tti, 3).values;                    
                     xs = nanrunmean(FIRA.analog.data(tti, 2).values, 40);
                     ys = nanrunmean(FIRA.analog.data(tti, 3).values, 40);
                     ts = (0:length(xs)-1) + FIRA.analog.data(tti, 2).start_time - getFIRA_ec(tti, sfixoff);
+                    score = getFIRA_ec(tti, 'score');
+                    co = {'m' 'k' 'c' 'r' 'g'}; 
+                    
+                    % Top plot is vs time
                     subplot(2,1,1); cla reset; hold on;
                     plot([-2500 1500], [0 0], 'k:');
                     plot([0 0], [-axsz axsz], 'k-');
-                    plot(ts, xs, 'r-');
-                    plot(ts, ys, 'g-');
-                    plot(ts, xsr, 'r:');
-                    plot(ts, ysr, 'g:');
-                    for ss = 1:size(sacs, 1)
-                        plot(sacs(ss,[1 1]), [-axsz axsz], '-', 'Color', co{ss}, 'LineWidth', 2);
-                    end
+                    plot(ts, xs, 'b-');
+                    plot(ts, ys, 'c-');
+                    plot(ts, xsr, 'b:');
+                    plot(ts, ysr, 'c:');
+                    plot(targAcq.*[1 1], [-axsz axsz], 'k-', 'LineWidth', 4);
+                    plot(getFIRA_ec(tti, 'RT').*[1 1], [-axsz axsz], '-', ...
+                        'Color', co{score+4}, 'LineWidth', 2);
+                    %for ss = 1:size(sacs, 1)
+                    %    plot(sacs(ss,[1 1]), [-axsz axsz], '-', 'Color', co{ss}, 'LineWidth', 2);
+                    %end
                     axis([-2500 1500 -axsz axsz]);
                     
+                    % Second is x vs y
                     subplot(2,1,2); cla reset; hold on;
                     plot(TcX, TcY, 'go', 'MarkerFaceColor', 'g', 'MarkerSize', 15);
                     plot(TeX, TeY, 'ro', 'MarkerFaceColor', 'r', 'MarkerSize', 15);
-                    for ss = 1:size(sacs, 1)
-                        plot(sacs(ss, 5), sacs(ss, 6), 'd', 'MarkerSize', 15, 'Color', co{ss}, 'MarkerFaceColor', co{ss});
-                    end
+                    plot(getFIRA_ec(tti, 'sac_endx'), getFIRA_ec(tti, 'sac_endy'), ...
+                        'kd', 'MarkerSize', 15, 'MarkerFaceColor', co{score+4});
+
+                    %for ss = 1:size(sacs, 1)
+                    %    plot(sacs(ss, 5), sacs(ss, 6), 'd', 'MarkerSize', 15, 'Color', co{ss}, 'MarkerFaceColor', co{ss});
+                    %end
                     plot(xs(ts>0), ys(ts>0), '-', 'Color', [0.5 0.5 0.5]);
                     plot(xsr(ts>0), ysr(ts>0), ':', 'Color', [0.5 0.5 0.5]);
                     plot([-10 10], [0 0], 'k:');

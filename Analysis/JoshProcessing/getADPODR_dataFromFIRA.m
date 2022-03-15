@@ -1,20 +1,61 @@
-function data_ = getADPODR_dataFromFIRA(fileName, convertedDataPath)
+function data_ = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly)
+% function data_ = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly)
 %
 
+%% Parse args
+%
 % Get the file and put it in the global FIRA data struct so we can use 
 %   the FIRA utilities
 arguments
-    fileName = 'MM_2022_02_22_5_44-sort01-3units.mat';
-    convertedDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/SortedConverted';
+    fileName = 'MM_2022_02_22_5_44-sort01-3units';
+    monkey = 'MM';
+    behaviorOnly = true;
 end
 
-% Below we extract data directly from the global FIRA struct
+% BehaviorOnly flag indicates that we don't get spike data and therefore
+%   don't look in the "Sorted" directors for the raw data but rather
+%   in the monkey-specific directory
+if behaviorOnly
+    if strcmp(monkey, 'MM')
+        rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/MrM';
+    else
+        rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Cicero';
+    end
+    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/BehaviorOnlyConverted';
+    spikeList = [];
+else
+    % Otherwise get data from Sorted files
+    rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Sorted';
+    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/SortedConverted';
+    spikeList = 'all';
+end
+
+%% Check for file
+%
+% If fileName is an index, use it to get the name from the file list
+if isempty(fileName)
+    fileName = 1;
+end
+if isnumeric(fileName)    
+    files = dir(fullfile(rawDataPath, '*.plx'));    
+    fileName = files(min(max(length(files)-fileName+1,1),length(files))).name(1:end-4);
+end
+
+% Check if already converted
+convertedFile = fullfile(convertedDataPath, fileName);
+if isempty(dir([convertedFile '.mat']))
+    bFile(fullfile(rawDataPath, fileName), [], ...
+        'spmADPODR5', convertedFile, spikeList, 49:51, 0, 1, 0, []);
+end
+
+%% Open converted file
+%
 global FIRA
+disp(fileName)
+openFIRA(convertedFile);
 
-% Open the file
-openFIRA(fullfile(convertedDataPath, fileName));
-
-% Collect data from FIRA and put into a struct
+%% Collect data from FIRA and put into a struct
+%
 data_ = struct('fileName', fileName, 'ecodes', [], 'timing', [], 'spikes', {{}});
 
 % Use all non-broken fixation trials
@@ -115,4 +156,6 @@ end
 data_.timing.sac_on = getFIRA_ec(Lgood, 'fp_off') + getFIRA_ec(Lgood, 'RT');
 
 %% Collect spikes
-data_.spikes = FIRA.spikes.data(Lgood, :);
+if isfield(FIRA, 'spikes')
+    data_.spikes = FIRA.spikes.data(Lgood, :);
+end
