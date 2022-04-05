@@ -7,7 +7,7 @@ function data_ = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly)
 % Get the file and put it in the global FIRA data struct so we can use 
 %   the FIRA utilities
 arguments
-    fileName = 'MM_2022_02_22_5_44-sort01-3units';
+    fileName = 'MM_2022_03_21_7_00';
     monkey = 'MM';
     behaviorOnly = true;
 end
@@ -17,16 +17,17 @@ end
 %   in the monkey-specific directory
 if behaviorOnly
     if strcmp(monkey, 'MM')
-        rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/MrM';
+        rawDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/MrM';
+%         rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/MrM';
     else
-        rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Cicero';
+        rawDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/Cicero';
     end
-    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/BehaviorOnlyConverted';
+    convertedDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/BehaviorOnlyConverted';
     spikeList = [];
 else
     % Otherwise get data from Sorted files
-    rawDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/Sorted';
-    convertedDataPath = '/Users/jigold/Library/CloudStorage/Box-Box/GoldLab/Data/Physiology/AODR/SortedConverted';
+    rawDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/Sorted';
+    convertedDataPath = 'C:/Users/alice/Box/GoldLab/Data/Physiology/AODR/SortedConverted';
     spikeList = 'all';
 end
 
@@ -44,7 +45,7 @@ end
 % Check if already converted
 convertedFile = fullfile(convertedDataPath, fileName);
 if isempty(dir([convertedFile '.mat']))
-    bFile(fullfile(rawDataPath, fileName), [], ...
+    bFile(fullfile(rawDataPath, [fileName '.plx']), [], ...
         'spmADPODR5', convertedFile, spikeList, 49:51, 0, 1, 0, []);
 end
 
@@ -158,4 +159,5 @@ data_.timing.sac_on = getFIRA_ec(Lgood, 'fp_off') + getFIRA_ec(Lgood, 'RT');
 %% Collect spikes
 if isfield(FIRA, 'spikes')
     data_.spikes = FIRA.spikes.data(Lgood, :);
+    data_.spikeid = FIRA.spikes.id;
 end
