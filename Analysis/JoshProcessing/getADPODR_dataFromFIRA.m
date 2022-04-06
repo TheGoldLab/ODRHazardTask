@@ -148,7 +148,7 @@ data_.timing = table;
 % These are values we can pull directly from FIRA
 timingNames = { ...
     'ring_on', 'sample_on', 'mean_on', 'target_off', 'fp_off', ...
-    'choices_on', 'fdbk_on', 'fdbk_off', 'all_off'};
+    'choices_on', 'fdbk_on', 'fdbk_off', 'targ_acq', 'all_off'};
 for nn = 1:length(timingNames)
     data_.timing.(timingNames{nn}) = getFIRA_ec(Lgood, timingNames{nn});
 end

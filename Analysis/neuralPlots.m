@@ -33,7 +33,7 @@ w = sampFreq.*normpdf(dtau,0,sigma);
     mem = round(mean(datastruct.timing.target_off-datastruct.timing.fp_off)-lb*1000):...
         round(mean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
     mot = round(nanmean(datastruct.timing.sac_on-datastruct.timing.fp_off)-lb*1000):...
-        round(nanmean(datastruct.timing.all_off-datastruct.timing.fp_off)-lb*1000);
+        round(nanmean(datastruct.timing.targ_acq-datastruct.timing.fp_off)-lb*1000);
 
     
 
@@ -49,6 +49,10 @@ for u = 1:length(UseUnitName)
     SpikeRastmat = nan(height(datastruct.timing),max(max(cellfun(@length,datastruct.spikes))));
     EventRastmat = nan(height(datastruct.timing),length(datastruct.timing{tr,:}));
     
+    spikeRatevis = nan(1,8);
+    spikeRatemem = nan(1,8);
+    spikeRatesacc = nan(1,8);
+    
     nexttile
     for tr = 1:length(datastruct.ecodes.trial_num)
         fpoff = datastruct.timing.fp_off(tr,:);
@@ -57,7 +61,7 @@ for u = 1:length(UseUnitName)
         trialSpikeTS = datastruct.spikes{tr,UseUnitInd(u)};
         trialLockSpikeTS = trialSpikeTS-fpoff;
         allSpikeTS = [allSpikeTS; trialLockSpikeTS];
-        matind = round((trialLockSpikeTS(trialLockSpikeTS>=lb*sampFreq&trialLockSpikeTS<=ub*sampFreq)-lb*sampFreq)+1);
+        matind = round((trialLockSpikeTS(trialLockSpikeTS>=lb*sampFreq&trialLockSpikeTS<=ub*sampFreq)-lb*sampFreq)+1);%+1 so no zero index
         allSpikes(tr,matind) =1;
         
         SpikeRastmat(tr,1:length(trialLockSpikeTS)) = trialLockSpikeTS;
@@ -74,7 +78,7 @@ for u = 1:length(UseUnitName)
     hold on
     plot(SpikeRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(SpikeRastmat,2)),'k|','MarkerSize', 0.1)
     xlim([-2.5*1000 2.5*1000])
-    xlabel('Time (ms) after fixation point turned off')
+    xlabel('Time (ms) after fixation point off')
     ylabel('Trial number')
     title(['Raster - Unit ' num2str(UseUnitName(u))])
     axis square
@@ -110,6 +114,16 @@ for u = 1:length(UseUnitName)
     polar([0:45:315].*pi./180,spikeRatesacc)
     title(['Sacc. Dir. Select. - Unit ' num2str(UseUnitName(u))])
     axis square
-
     
+    
+    clear allSpikes allSpikeTS spikeRatevis spikeRatemem spikeRatesacc
 end
+
+f1.WindowState = 'maximize';
+text(-20,10.6,fileName)
+
+cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
+mkdir(fileName)
+cd(fileName)
+exportgraphics(f1,[fileName '_neuraloverview.png'],'Resolution',300)
+close(f1)
