@@ -11,7 +11,7 @@ UseUnitName = datastruct.spikeid(UseUnitInd);
 
 sampFreq = 1000;
 
-ub = 1;
+ub = 1.5;
 lb = -1.5;
 sigma = 0.035.*sampFreq;
 dtau = linspace(-250,250,0.25.*sampFreq);
@@ -30,8 +30,10 @@ w = sampFreq.*normpdf(dtau,0,sigma);
     
     vis = round(mean(datastruct.timing.sample_on-datastruct.timing.fp_off)-lb*1000):...
         round(mean(datastruct.timing.target_off-datastruct.timing.fp_off)-lb*1000);
-    mem = mean(datastruct.timing.fp_off-datastruct.timing.target_off);
-    mot = mean(datastruct.timing.all_off-datastruct.timing.sac_on);
+    mem = round(mean(datastruct.timing.target_off-datastruct.timing.fp_off)-lb*1000):...
+        round(mean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
+    mot = round(nanmean(datastruct.timing.sac_on-datastruct.timing.fp_off)-lb*1000):...
+        round(nanmean(datastruct.timing.all_off-datastruct.timing.fp_off)-lb*1000);
 
     
 
@@ -44,8 +46,8 @@ tiledlayout(length(UseUnitName),5);
 for u = 1:length(UseUnitName)
     allSpikes = zeros(height(datastruct.timing),(ub-lb).*sampFreq);
     allSpikeTS = [];
-    %spikeRate = zeros(1,length(targ));
-    
+    SpikeRastmat = nan(height(datastruct.timing),max(max(cellfun(@length,datastruct.spikes))));
+    EventRastmat = nan(height(datastruct.timing),length(datastruct.timing{tr,:}));
     
     nexttile
     for tr = 1:length(datastruct.ecodes.trial_num)
@@ -57,48 +59,56 @@ for u = 1:length(UseUnitName)
         allSpikeTS = [allSpikeTS; trialLockSpikeTS];
         matind = round((trialLockSpikeTS(trialLockSpikeTS>=lb*sampFreq&trialLockSpikeTS<=ub*sampFreq)-lb*sampFreq)+1);
         allSpikes(tr,matind) =1;
+        
+        SpikeRastmat(tr,1:length(trialLockSpikeTS)) = trialLockSpikeTS;
+        EventRastmat(tr,1:length(trialLockTS)) = trialLockTS;
 
-        eventBar = [0 1]+tr-1;
-        plot(repmat(trialLockTS,2,1),repmat(eventBar,length(trialLockTS),1)','r')
-        hold on
-        spikeBar = [0 1]+tr-1;
-        plot(repmat(trialLockSpikeTS',2,1),repmat(spikeBar,numel(trialLockSpikeTS),1)','k')
-        xlabel('Time after fixation point turned off')
+%         eventBar = [0 1]+tr-1;
+%         plot(repmat(trialLockTS,2,1),repmat(eventBar,length(trialLockTS),1)','r')
+%         hold on
+%         spikeBar = [0 1]+tr-1;
+%         plot(repmat(trialLockSpikeTS',2,1),repmat(spikeBar,numel(trialLockSpikeTS),1)','k')
+%         xlabel('Time after fixation point turned off')
     end
+    plot(EventRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(EventRastmat,2)),'r|', 'MarkerSize', 0.1)
+    hold on
+    plot(SpikeRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(SpikeRastmat,2)),'k|','MarkerSize', 0.1)
     xlim([-2.5*1000 2.5*1000])
+    xlabel('Time (ms) after fixation point turned off')
+    ylabel('Trial number')
     title(['Raster - Unit ' num2str(UseUnitName(u))])
     axis square
     
     nexttile
     histogram(allSpikeTS)
-    xlabel('Time after fixation point turned off')
+    xlabel('Time (ms) after fixation point turned off')
     xlim([-2.5*1000 2.5*1000])
     title(['PSTH - Unit ' num2str(UseUnitName(u))])
     axis square
     
 
     for targ = 1:8
-       targInds = find(ismember(Ts(:,1:2)==unTs(targ,:),[1 1],'rows'))
-       spikeRatevis(targ) = mean(sum(allSpikes(Ltr&targInds,(length(allSpikes)/5-0.2*sampFreq):(length(allSpikes)/5-0.095*sampFreq)),2));
-       spikeRatemem(targ) = mean(sum(allSpikes(Ltr&targInds,(length(allSpikes)/5):(length(allSpikes)/5*3)),2));
-       spikeRatesacc(targ) = mean(sum(allSpikes(Ltr&targInds,(length(allSpikes)/5*3):(length(allSpikes)/5*3+0.3*sampFreq)),2));
+       targInds = find(ismember(Ts(:,1:2)==unTs(targ,:),[1 1],'rows'));
+       spikeRatevis(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),vis),2));
+       spikeRatemem(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),mem),2));
+       spikeRatesacc(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),mot),2));
     %     plot(targ,mean(sum(allSpikes(TrialTypeList{targ},:),2)),'+','Color', targColors(targ,:))
     end
 
 
     nexttile
-    polar([0:15:345].*pi./180,spikeRatevis)
-    title(['Vis. Dir. Select. - Unit ' num2str(unitNums(u))])
+    polar([0:45:315].*pi./180,spikeRatevis)
+    title(['Vis. Dir. Select. - Unit ' num2str(UseUnitName(u))])
     axis square
     
     nexttile
-    polar([0:15:345].*pi./180,spikeRatemem)
-    title(['Mem. Dir. Select. - Unit ' num2str(unitNums(u))])
+    polar([0:45:315].*pi./180,spikeRatemem)
+    title(['Mem. Dir. Select. - Unit ' num2str(UseUnitName(u))])
     axis square
     
     nexttile
-    polar([0:15:345].*pi./180,spikeRatesacc)
-    title(['Sacc. Dir. Select. - Unit ' num2str(unitNums(u))])
+    polar([0:45:315].*pi./180,spikeRatesacc)
+    title(['Sacc. Dir. Select. - Unit ' num2str(UseUnitName(u))])
     axis square
 
     
