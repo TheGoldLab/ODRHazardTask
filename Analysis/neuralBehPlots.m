@@ -1,6 +1,7 @@
-addpath(genpath('C:\Users\alice\Documents\Projects\ODRHazardTask\Analysis\JoshProcessing'));
+function neuralBehPlots(fileName, monkey, behaviorOnly, figLoc)
 
-datastruct = getADPODR_dataFromFIRA(fileName, 'MM', 0)
+datastruct = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly);
+
 
 
 %datastruct.ecodes.Properties.VariableNames
@@ -170,9 +171,9 @@ end
 
 
 f1.WindowState = 'maximize';
-text(-20,10.6,fileName)
+sgtitle(fileName)
 
-cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
+cd(figLoc)
 cd(fileName)
 exportgraphics(f1,[fileName '_neuralbeh1.png'],'Resolution',300)
 close(f1)
@@ -209,15 +210,17 @@ xticks([1:length(sig)])
 set(gca,'XTickLabel',mdl1.CoefficientNames(2:end)) 
 xtickangle(45)
 ylabel('Coefficients Value')
-title('Model 1 Coefficients')
+title('Linear Model Coefficients')
 
-clear decBinnedSpikes neuTable mdl1
+clear decSumSpikes neuTable mdl1
 end
 
 f2.WindowState = 'maximize';
-text(-2.7,3.15,fileName)
+sgtitle(fileName)
 
-cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
+cd(figLoc)
 cd(fileName)
 exportgraphics(f2,[fileName '_neuralbehLM.png'],'Resolution',300)
 close(f2)
+
+end

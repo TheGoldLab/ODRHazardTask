@@ -1,7 +1,7 @@
 
-addpath(genpath('C:\Users\alice\Documents\Projects\ODRHazardTask\Analysis\JoshProcessing'));
+function neuralPlots(fileName, monkey, behaviorOnly, figLoc)
 
-datastruct = getADPODR_dataFromFIRA(fileName, 'MM', 0)
+datastruct = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly)
 
 
 %datastruct.ecodes.Properties.VariableNames
@@ -47,7 +47,7 @@ for u = 1:length(UseUnitName)
     allSpikes = zeros(height(datastruct.timing),(ub-lb).*sampFreq);
     allSpikeTS = [];
     SpikeRastmat = nan(height(datastruct.timing),max(max(cellfun(@length,datastruct.spikes))));
-    EventRastmat = nan(height(datastruct.timing),length(datastruct.timing{tr,:}));
+    EventRastmat = nan(height(datastruct.timing),length(datastruct.timing{1,:}));
     
     spikeRatevis = nan(1,8);
     spikeRatemem = nan(1,8);
@@ -120,10 +120,12 @@ for u = 1:length(UseUnitName)
 end
 
 f1.WindowState = 'maximize';
-text(-20,10.6,fileName)
+sgtitle(fileName)
 
-cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
-mkdir(fileName)
+cd(figLoc)
+% mkdir(fileName)
 cd(fileName)
 exportgraphics(f1,[fileName '_neuraloverview.png'],'Resolution',300)
 close(f1)
+
+end
