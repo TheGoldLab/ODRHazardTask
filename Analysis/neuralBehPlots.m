@@ -77,7 +77,7 @@ nexttile
         
     end
 
-    binEdges = 1:100:size(allSpikes,2);
+binEdges = 1:100:size(allSpikes,2);
 %     [r, c] = find(allSpikes)
 %     binnedSpikes = histogram(c,bins)
 binnedSpikes = nan(size(allSpikes,1),length(binEdges));
@@ -88,6 +88,8 @@ for b = 1:length(binEdges)
         binnedSpikes(:,b) = sum(allSpikes(:,binEdges(b):binEdges(b+1)),2);
     end
 end
+
+allBinnedSpikes{u} = binnedSpikes;
 
 CueFR = zeros(numCues,length(binEdges));
 HFR  = zeros(numHazards,length(binEdges));
@@ -103,7 +105,7 @@ for ll = 1:numCues
     % For each hazard
     for hh = 1:numHazards
         if ll == 1
-            HFR(hh,:) = mean(binnedSpikes(datastruct.ecodes.hazard == hazards(hh),:))./0.1;
+            HFR(hh,:) = mean(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),:))./0.1;
         end
         Lh = Lcue & datastruct.ecodes.hazard == hazards(hh);
         CueHFR(ch,:) = mean(binnedSpikes(Lh,:))./0.1;
@@ -112,7 +114,7 @@ for ll = 1:numCues
         
         
         normcueHPR(hh,ll) = sum(sum(binnedSpikes(Lh,decbin)))./...
-            sum(sum(binnedSpikes(datastruct.ecodes.hazard == hazards(hh),decbin)));
+            sum(sum(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin)));
 %         normcueHFR(hh,ll) = sum(sum(allSpikes(Lh,:)))./sum(length(binnedSpikes(Lh,:)));
         
 %         % collect data
@@ -175,3 +177,47 @@ cd(fileName)
 exportgraphics(f1,[fileName '_neuralbeh1.png'],'Resolution',300)
 close(f1)
 
+%%
+f2 = figure
+tiledlayout(length(UseUnitName),2);
+
+%Use 'good' trials
+
+TrialN = datastruct.ecodes.trial_num(Lgood);
+Switch = Lswitch(Lgood);
+Hs = datastruct.ecodes.hazard(Lgood);
+CueLoc = sCues(Lgood);
+for u = 1:length(UseUnitName)
+decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
+neuTable = table(TrialN,Switch,Hs,CueLoc, decSumSpikes);
+
+mdl1 = fitlm(neuTable,'PredictorVars',[1:4],'ResponseVar',"decSumSpikes")
+
+nexttile
+plot(mdl1)
+nexttile
+sig = mdl1.Coefficients.pValue(2:end)<0.05;
+coefs = mdl1.Coefficients.Estimate(2:end);
+[rs,c]=find(sig);
+[rns,c]=find(~sig);
+
+hold on
+plot(rs,coefs(find(sig)), '*')
+plot(rns,coefs(find(~sig)), 'o')
+yline(0,'--')
+xticks([1:length(sig)])
+set(gca,'XTickLabel',mdl1.CoefficientNames(2:end)) 
+xtickangle(45)
+ylabel('Coefficients Value')
+title('Model 1 Coefficients')
+
+clear decBinnedSpikes neuTable mdl1
+end
+
+f2.WindowState = 'maximize';
+text(-2.7,3.15,fileName)
+
+cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
+cd(fileName)
+exportgraphics(f2,[fileName '_neuralbehLM.png'],'Resolution',300)
+close(f2)
