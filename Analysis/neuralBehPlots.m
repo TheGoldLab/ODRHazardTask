@@ -16,6 +16,9 @@ sigma = 0.035.*sampFreq;
 dtau = linspace(-250,250,0.25.*sampFreq);
 w = sampFreq.*normpdf(dtau,0,sigma);
 
+dec = round(mean(datastruct.timing.sample_on-datastruct.timing.fp_off)-lb*1000):...
+        round(mean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
+
 
 %% Collect relevant data
 % PMF
@@ -56,7 +59,7 @@ end
 
 %%
 f1 = figure
-tiledlayout(length(UseUnitName),2);
+tiledlayout(length(UseUnitName),4);
 
 for u = 1:length(UseUnitName)
     allSpikes = zeros(height(datastruct.timing),(ub-lb).*sampFreq);
@@ -77,18 +80,40 @@ nexttile
     binEdges = 1:100:size(allSpikes,2);
 %     [r, c] = find(allSpikes)
 %     binnedSpikes = histogram(c,bins)
-binnedSpikes = nan(size(allSpikes,1),length(binEdges)-1);
-for b = 1:length(binEdges)-1
-    binnedSpikes(:,b) = sum(allSpikes(:,binEdges(b):binEdges(b+1)),2);
+binnedSpikes = nan(size(allSpikes,1),length(binEdges));
+for b = 1:length(binEdges)
+    if b == length(binEdges)
+        binnedSpikes(:,b) = sum(allSpikes(:,binEdges(b):end),2);
+    else
+        binnedSpikes(:,b) = sum(allSpikes(:,binEdges(b):binEdges(b+1)),2);
+    end
 end
 
+CueFR = zeros(numCues,length(binEdges));
+HFR  = zeros(numHazards,length(binEdges));
+CueHFR = zeros(numCues*numHazards,length(binEdges));
+normcueHPR = nan(numHazards,numCues);
+ch = 1;
+decbin = find(binEdges<dec(1),1,'last'):find(binEdges>dec(end),1);
 % For each cue location
 for ll = 1:numCues
     Lcue = Lgood & sCues==cues(ll);
+    CueFR(ll,:) = mean(binnedSpikes(Lcue,:))./0.1;
     
     % For each hazard
     for hh = 1:numHazards
+        if ll == 1
+            HFR(hh,:) = mean(binnedSpikes(datastruct.ecodes.hazard == hazards(hh),:))./0.1;
+        end
         Lh = Lcue & datastruct.ecodes.hazard == hazards(hh);
+        CueHFR(ch,:) = mean(binnedSpikes(Lh,:))./0.1;
+        ch = ch+1;
+        
+        
+        
+        normcueHPR(hh,ll) = sum(sum(binnedSpikes(Lh,decbin)))./...
+            sum(sum(binnedSpikes(datastruct.ecodes.hazard == hazards(hh),decbin)));
+%         normcueHFR(hh,ll) = sum(sum(allSpikes(Lh,:)))./sum(length(binnedSpikes(Lh,:)));
         
 %         % collect data
 %         pdat(ll,:,hh,1) = [ ...
@@ -107,4 +132,46 @@ for ll = 1:numCues
     end
 end
 
+C = repmat(linspace(1,0.4,size(CueFR,1)).',1,3);
+% axes('ColorOrder',C,'NextPlot','add')
+% colormap(gca,'gray')
+hold on
+for ll = 1:numCues
+plot(binEdges+lb*1000,CueFR(ll,:),'Color', C(ll,:))
 end
+ylabel('FR (sp/s)')
+xlabel('Time from fix off (ms)')
+title(['FR by Cue - Unit ' num2str(UseUnitName(u))])
+axis square
+legend(num2str(cues),'Location','BestOutside')
+
+nexttile
+plot(binEdges+lb*1000,HFR')
+title(['FR by Haz - Unit ' num2str(UseUnitName(u))])
+axis square
+legend(num2str(hazards),'Location','BestOutside')
+nexttile
+plot(binEdges+lb*1000,CueHFR')
+title(['FR by Haz and Cue - Unit ' num2str(UseUnitName(u))])
+axis square
+% colormap jet
+nexttile
+plot(cues,normcueHPR)
+xlabel('cue')
+ylabel('Percent Response')
+title(['Spike Dec Resp to Cue by Block - Unit ' num2str(UseUnitName(u))])
+axis square
+legend(num2str(hazards),'Location','BestOutside')
+
+
+end
+
+
+f1.WindowState = 'maximize';
+text(-20,10.6,fileName)
+
+cd('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions')
+cd(fileName)
+exportgraphics(f1,[fileName '_neuralbeh1.png'],'Resolution',300)
+close(f1)
+
