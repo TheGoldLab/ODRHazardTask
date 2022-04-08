@@ -32,8 +32,8 @@ w = sampFreq.*normpdf(dtau,0,sigma);
         round(mean(datastruct.timing.target_off-datastruct.timing.fp_off)-lb*1000);
     mem = round(mean(datastruct.timing.target_off-datastruct.timing.fp_off)-lb*1000):...
         round(mean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
-    mot = round(nanmean(datastruct.timing.sac_on-datastruct.timing.fp_off)-lb*1000):...
-        round(nanmean(datastruct.timing.targ_acq-datastruct.timing.fp_off)-lb*1000);
+    sac = round(nanmean(datastruct.timing.sac_on-50-datastruct.timing.fp_off)-lb*1000):...
+        round(nanmean(datastruct.timing.sac_on+50-datastruct.timing.fp_off)-lb*1000);
 
     
 
@@ -95,7 +95,7 @@ for u = 1:length(UseUnitName)
        targInds = find(ismember(Ts(:,1:2)==unTs(targ,:),[1 1],'rows'));
        spikeRatevis(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),vis),2));
        spikeRatemem(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),mem),2));
-       spikeRatesacc(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),mot),2));
+       spikeRatesacc(targ) = mean(sum(allSpikes(intersect(find(Ltr),targInds),sac),2));
     %     plot(targ,mean(sum(allSpikes(TrialTypeList{targ},:),2)),'+','Color', targColors(targ,:))
     end
 
