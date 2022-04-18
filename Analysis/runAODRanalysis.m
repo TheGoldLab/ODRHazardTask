@@ -21,13 +21,13 @@ plotADPODR_sessionBehavior(fileName, monkey, behaviorOnly, [])
 f0 = gcf;
 % f0.WindowState = 'maximize';
 f0.Units = 'normalize';
-f0.OuterPosition = [0 0 0.4 1.5];
+f0.OuterPosition = [0 0 0.35 1.5];
 cd(figLoc)
 if ~exist([figLoc fileName],'dir')
     mkdir(fileName)
 end
 cd(fileName)
-exportgraphics(f0,[fileName '_beh.png'],'Resolution',300)
+exportgraphics(f0,[fileName '_1_beh.png'],'Resolution',300)
 close(f0)
 
 %Plot neural data if sorted

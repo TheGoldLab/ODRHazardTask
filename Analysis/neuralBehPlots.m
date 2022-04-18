@@ -114,7 +114,9 @@ for ll = 1:numCues
         
         
         
-        normcueHPR(hh,ll) = sum(sum(binnedSpikes(Lh,decbin)))./...
+        normcueHPR(hh,ll) = length(binnedSpikes(Lh,decbin))./...
+            length(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin))-...
+            sum(sum(binnedSpikes(Lh,decbin)))./...
             sum(sum(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin)));
 %         normcueHFR(hh,ll) = sum(sum(allSpikes(Lh,:)))./sum(length(binnedSpikes(Lh,:)));
         
@@ -160,8 +162,8 @@ axis square
 % colormap jet
 nexttile
 plot(cues,normcueHPR)
-xlabel('cue')
-ylabel('Percent Response')
+xlabel('cue (+switch/-stay)')
+ylabel('% Diff from Expect')
 title(['Spike Dec Resp to Cue by Block - Unit ' num2str(UseUnitName(u))])
 axis square
 legend(num2str(hazards),'Location','BestOutside')
@@ -175,7 +177,7 @@ sgtitle(fileName)
 
 cd(figLoc)
 cd(fileName)
-exportgraphics(f1,[fileName '_neuralbeh1.png'],'Resolution',300)
+exportgraphics(f1,[fileName '_4_neuralbeh1.png'],'Resolution',300)
 close(f1)
 
 %%
@@ -188,11 +190,12 @@ TrialN = datastruct.ecodes.trial_num(Lgood);
 Switch = Lswitch(Lgood);
 Hs = datastruct.ecodes.hazard(Lgood);
 CueLoc = sCues(Lgood);
+PrevCorr = datastruct.ecodes.score(find(Lgood)-1);
 for u = 1:length(UseUnitName)
 decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
-neuTable = table(TrialN,Switch,Hs,CueLoc, decSumSpikes);
+neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSumSpikes);
 
-mdl1 = fitlm(neuTable,'PredictorVars',[1:4],'ResponseVar',"decSumSpikes")
+mdl1 = fitlm(neuTable,'PredictorVars',[1:5],'ResponseVar',"decSumSpikes")
 
 nexttile
 plot(mdl1)
@@ -220,7 +223,7 @@ sgtitle(fileName)
 
 cd(figLoc)
 cd(fileName)
-exportgraphics(f2,[fileName '_neuralbehLM.png'],'Resolution',300)
+exportgraphics(f2,[fileName '_5_neuralbehLM.png'],'Resolution',300)
 close(f2)
 
 end
