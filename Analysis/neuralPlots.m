@@ -34,6 +34,9 @@ w = sampFreq.*normpdf(dtau,0,sigma);
         round(nanmean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
     sac = round(nanmean(datastruct.timing.sac_on-50-datastruct.timing.fp_off)-lb*1000):...
         round(nanmean(datastruct.timing.sac_on+50-datastruct.timing.fp_off)-lb*1000);
+    
+    rew = round(nanmean(datastruct.timing.sac_on-datastruct.timing.targ_acq)-lb*1000):...
+        round(nanmean(datastruct.timing.targ_acq+600-datastruct.timing.targ_acq)-lb*1000);
 
     
 
@@ -44,16 +47,24 @@ f1 = figure;
 tiledlayout(length(UseUnitName),3);
 f2 = figure;
 tiledlayout(length(UseUnitName),3);
+f3 = figure;
+tiledlayout(length(UseUnitName),3);
+
 
 for u = 1:length(UseUnitName)
     allSpikes = zeros(height(datastruct.timing),(ub-lb).*sampFreq);
+    rewallSpikes = zeros(height(datastruct.timing),3701);
     allSpikeTS = [];
     MGScorrSpikeTS = [];
     MGSerrSpikeTS = [];
     taskcorrSpikeTS = [];
     taskerrSpikeTS = [];
+    rewcorrSpikeTS =[];
+    rewerrSpikeTS = [];
     SpikeRastmat = nan(height(datastruct.timing),max(max(cellfun(@length,datastruct.spikes))));
     EventRastmat = nan(height(datastruct.timing),length(datastruct.timing{1,:}));
+    rewSpikeRastmat = nan(height(datastruct.timing),max(max(cellfun(@length,datastruct.spikes))));
+    rewEventRastmat = nan(height(datastruct.timing),length(datastruct.timing{1,:}));
     
     spikeRatevis = nan(1,8);
     spikeRatemem = nan(1,8);
@@ -93,7 +104,42 @@ for u = 1:length(UseUnitName)
 %         spikeBar = [0 1]+tr-1;
 %         plot(repmat(trialLockSpikeTS',2,1),repmat(spikeBar,numel(trialLockSpikeTS),1)','k')
 %         xlabel('Time after fixation point turned off')
+
+        targacqrew = datastruct.timing.targ_acq(tr,:);
+        rewLockTS = trialTS-targacqrew;
+        rewLockSpikeTS = trialSpikeTS-targacqrew;
+        if datastruct.ecodes.task_id(tr)>=2
+            if datastruct.ecodes.score(tr) == 1
+                rewcorrSpikeTS = [rewcorrSpikeTS; rewLockSpikeTS];
+            elseif datastruct.ecodes.score(tr) == 0
+                rewerrSpikeTS = [rewerrSpikeTS; rewLockSpikeTS];
+            end
+        end
+        
+        rewSpikeRastmat(tr,1:length(rewLockSpikeTS)) = rewLockSpikeTS;
+        rewEventRastmat(tr,1:length(rewLockTS)) = rewLockTS;
+        
+        rewmatind = round((rewLockSpikeTS(rewLockSpikeTS>=-3000&rewLockSpikeTS<=700)--3000)+1);%+1 so no zero index
+        rewallSpikes(tr,rewmatind) =1;
+        
+        
     end
+    
+    binEdges = 1:100:size(rewallSpikes,2);
+    binnedSpikes = nan(size(rewallSpikes,1),length(binEdges));
+    for b = 1:length(binEdges)
+        if b == length(binEdges)
+            binnedSpikes(:,b) = sum(rewallSpikes(:,binEdges(b):end),2);
+        else
+            binnedSpikes(:,b) = sum(rewallSpikes(:,binEdges(b):binEdges(b+1)),2);
+        end
+    end
+
+    allBinnedSpikes{u} = binnedSpikes;
+    
+    rewbin = find(binEdges<rew(1),1,'last'):find(binEdges>rew(end),1);
+    
+    
     plot(EventRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(EventRastmat,2)),'r|', 'MarkerSize', 0.1)
     hold on
     plot(SpikeRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(SpikeRastmat,2)),'k|','MarkerSize', 0.1)
@@ -124,6 +170,8 @@ for u = 1:length(UseUnitName)
     axis square
     
     
+       
+    
     figure(f2)
 
     for targ = 1:8
@@ -151,6 +199,43 @@ for u = 1:length(UseUnitName)
     axis square
     
     
+    figure(f3)
+    
+    nexttile
+    plot(rewEventRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(rewEventRastmat,2)),'r|', 'MarkerSize', 0.1)
+    hold on
+    plot(rewSpikeRastmat,repmat([1:length(datastruct.ecodes.trial_num)]',1,size(rewSpikeRastmat,2)),'k|','MarkerSize', 0.1)
+    blockChangeInd = find(diff(datastruct.ecodes.task_id)~=0)+1;
+    yline(blockChangeInd,'r','LineWidth',1);
+    xlim([-3000 700])
+    xlabel('Time (ms) after fixation point off')
+    ylabel('Trial number')
+    title(['Raster - Unit ' num2str(UseUnitName(u))])
+    axis square
+    
+    nexttile
+    histogram(rewcorrSpikeTS)
+    hold on
+    histogram(rewerrSpikeTS)
+    xlabel('Time (ms) after reward expected')
+    xlim([-3*1000 700])
+    title(['Task PSTH - Unit ' num2str(UseUnitName(u))])
+    axis square
+    
+    nexttile
+    hold on
+    plot(linspace(-100*(length(rewbin)-7),600,length(rewbin)),...
+        mean(binnedSpikes(datastruct.ecodes.task_id>1&datastruct.ecodes.score==1,rewbin))./0.1,'k')
+    plot(linspace(-100*(length(rewbin)-7),600,length(rewbin)),...
+        mean(binnedSpikes(datastruct.ecodes.task_id>1&datastruct.ecodes.score==0,rewbin))./0.1,'r')
+    xline(0,':')
+    xlabel('Time (ms) after reward expected')
+    ylabel('spikes/s')
+    title(['Task PSTH - Unit ' num2str(UseUnitName(u))])
+    axis square
+    
+   
+    
     clear allSpikes allSpikeTS spikeRatevis spikeRatemem spikeRatesacc
 end
 
@@ -172,4 +257,13 @@ cd(fileName)
 exportgraphics(f2,[fileName '_3_neuralselectivity.png'],'Resolution',300)
 close(f2)
 
+
+f3.WindowState = 'maximize';
+sgtitle(fileName)
+
+cd(figLoc)
+% mkdir(fileName)
+cd(fileName)
+exportgraphics(f3,[fileName '_4_rewardresponse.png'],'Resolution',300)
+close(f3)
 end

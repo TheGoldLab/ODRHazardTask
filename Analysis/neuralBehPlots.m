@@ -17,8 +17,8 @@ sigma = 0.035.*sampFreq;
 dtau = linspace(-250,250,0.25.*sampFreq);
 w = sampFreq.*normpdf(dtau,0,sigma);
 
-dec = round(mean(datastruct.timing.sample_on-datastruct.timing.fp_off)-lb*1000):...
-        round(mean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
+dec = round(nanmean(datastruct.timing.sample_on-datastruct.timing.fp_off)-lb*1000):...
+        round(nanmean(datastruct.timing.fp_off-datastruct.timing.fp_off)-lb*1000);
 
 
 %% Collect relevant data
@@ -163,7 +163,8 @@ axis square
 nexttile
 plot(cues,normcueHPR)
 xlabel('cue (+switch/-stay)')
-ylabel('% Diff from Expect')
+% ylabel('Diff from Expect (sp/s)')
+ylabel('Gen-Act % sp')
 title(['Spike Dec Resp to Cue by Block - Unit ' num2str(UseUnitName(u))])
 axis square
 legend(num2str(hazards),'Location','BestOutside')
@@ -177,7 +178,7 @@ sgtitle(fileName)
 
 cd(figLoc)
 cd(fileName)
-exportgraphics(f1,[fileName '_4_neuralbeh1.png'],'Resolution',300)
+exportgraphics(f1,[fileName '_5_neuralbeh1.png'],'Resolution',300)
 close(f1)
 
 %%
@@ -190,7 +191,16 @@ TrialN = datastruct.ecodes.trial_num(Lgood);
 Switch = Lswitch(Lgood);
 Hs = datastruct.ecodes.hazard(Lgood);
 CueLoc = sCues(Lgood);
-PrevCorr = datastruct.ecodes.score(find(Lgood)-1);
+prevCorrInd = find(Lgood)-1;
+pad = 0;
+if sum(prevCorrInd==0)>0
+    prevCorrInd(prevCorrInd==0)=[];
+    pad = 1;
+end
+PrevCorr = datastruct.ecodes.score(prevCorrInd);
+if pad == 1;
+    PrevCorr = [nan; PrevCorr];
+end
 for u = 1:length(UseUnitName)
 decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
 neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSumSpikes);
@@ -223,7 +233,7 @@ sgtitle(fileName)
 
 cd(figLoc)
 cd(fileName)
-exportgraphics(f2,[fileName '_5_neuralbehLM.png'],'Resolution',300)
+exportgraphics(f2,[fileName '_6_neuralbehLM.png'],'Resolution',300)
 close(f2)
 
 end
