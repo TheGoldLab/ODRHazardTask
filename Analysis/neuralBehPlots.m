@@ -113,11 +113,11 @@ for ll = 1:numCues
         ch = ch+1;
         
         
-        
-        normcueHPR(hh,ll) = length(binnedSpikes(Lh,decbin))./...
-            length(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin))-...
-            sum(sum(binnedSpikes(Lh,decbin)))./...
-            sum(sum(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin)));
+        normcueHPR(hh,ll) = mean(mean(binnedSpikes(Lh,decbin))./0.1);
+%         normcueHPR(hh,ll) = length(binnedSpikes(Lh,decbin))./...
+%             length(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin))-...
+%             sum(sum(binnedSpikes(Lh,decbin)))./...
+%             sum(sum(binnedSpikes(Lgood & datastruct.ecodes.hazard == hazards(hh),decbin)));
 %         normcueHFR(hh,ll) = sum(sum(allSpikes(Lh,:)))./sum(length(binnedSpikes(Lh,:)));
         
 %         % collect data
@@ -164,7 +164,7 @@ nexttile
 plot(cues,normcueHPR)
 xlabel('cue (+switch/-stay)')
 % ylabel('Diff from Expect (sp/s)')
-ylabel('Gen-Act % sp')
+ylabel('avg. sp/s/trial')
 title(['Spike Dec Resp to Cue by Block - Unit ' num2str(UseUnitName(u))])
 axis square
 legend(num2str(hazards),'Location','BestOutside')
@@ -203,9 +203,10 @@ if pad == 1;
 end
 for u = 1:length(UseUnitName)
 decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
-neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSumSpikes);
+decSpikesPerSec = decSumSpikes./length(decbin)./0.1
+neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSpikesPerSec);
 
-mdl1 = fitlm(neuTable,'PredictorVars',[1:5],'ResponseVar',"decSumSpikes")
+mdl1 = fitlm(neuTable,'PredictorVars',[1:5],'ResponseVar',"decSpikesPerSec")
 
 nexttile
 plot(mdl1)
