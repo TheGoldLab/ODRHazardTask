@@ -190,7 +190,8 @@ tiledlayout(length(UseUnitName),2);
 TrialN = datastruct.ecodes.trial_num(Lgood);
 Switch = Lswitch(Lgood);
 Hs = datastruct.ecodes.hazard(Lgood);
-CueLoc = sCues(Lgood);
+CueLoc = datastruct.ecodes.sample_id(Lgood);
+CueSw = sCues(Lgood);
 prevCorrInd = find(Lgood)-1;
 pad = 0;
 if sum(prevCorrInd==0)>0
@@ -204,9 +205,9 @@ end
 for u = 1:length(UseUnitName)
 decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
 decSpikesPerSec = decSumSpikes./length(decbin)./0.1;
-neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSpikesPerSec);
+neuTable = table(TrialN,Switch,Hs,CueLoc,CueSw,PrevCorr, decSpikesPerSec);
 
-mdl1 = fitlm(neuTable,'PredictorVars',[1:5],'ResponseVar',"decSpikesPerSec")
+mdl1 = fitlm(neuTable,'PredictorVars',[1:6],'ResponseVar',"decSpikesPerSec")
 
 nexttile
 plot(mdl1)

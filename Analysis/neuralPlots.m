@@ -185,7 +185,7 @@ for u = 1:length(UseUnitName)
     xline(0,':')
     xlabel('Time (ms) after fix off')
     ylabel('spikes/s')
-    title(['Task PSTH - Unit ' num2str(UseUnitName(u))])
+    title(['MGS PSTH - Unit ' num2str(UseUnitName(u))])
     pbaspect([2,1,1])
     
 %     nexttile
