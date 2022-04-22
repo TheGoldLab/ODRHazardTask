@@ -203,7 +203,7 @@ if pad == 1;
 end
 for u = 1:length(UseUnitName)
 decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
-decSpikesPerSec = decSumSpikes./length(decbin)./0.1
+decSpikesPerSec = decSumSpikes./length(decbin)./0.1;
 neuTable = table(TrialN,Switch,Hs,CueLoc,PrevCorr, decSpikesPerSec);
 
 mdl1 = fitlm(neuTable,'PredictorVars',[1:5],'ResponseVar',"decSpikesPerSec")
