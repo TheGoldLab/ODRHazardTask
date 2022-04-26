@@ -34,3 +34,30 @@ for f = [3:18,20:length(filesUse)]%1:length(monkeyInd)
     NeuTblAllSess = vertcat(NeuTblAllSess, NeuTblAll);
     
 end
+
+figure
+plot([0.005 0.5],hfitall','ko-')
+xlim([-0.1 0.6])
+ylabel('Fit H')
+xlabel('Generative H')
+
+figure
+subplot(1,3,1)
+scatter(selectTblAll.dir_vis,selectTblAll.k_1)
+axis square
+xlabel('Degrees')
+ylabel('k fit')
+title('Vis. Select.')
+subplot(1,3,2)
+scatter(selectTblAll.dir_mem,selectTblAll.k_2)
+axis square
+xlabel('Degrees')
+ylabel('k fit')
+title('Mem. Select.')
+subplot(1,3,3)
+scatter(selectTblAll.dir_sac,selectTblAll.k_3)
+axis square
+xlabel('Degrees')
+ylabel('k fit')
+title('Sacc. Select.')
+
