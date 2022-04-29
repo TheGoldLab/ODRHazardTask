@@ -6,8 +6,14 @@ AnalysisLoc = pwd;
 
 behaviorOnly = input("Unsorted? (1/0):")
 if behaviorOnly
-    dir('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\MrM')
     figLoc = 'C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\Behavior';
+    monkf = input('Mr. M? (1/0):')
+    if monkf
+        dir('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\MrM')
+    else
+        dir('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Cicero')
+    end
+    
 else
     dir('C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Sorted')
     figLoc = 'C:\Users\alice\Box\GoldLab\Data\Physiology\AODR\Figures\SortedSessions';

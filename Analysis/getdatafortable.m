@@ -1,4 +1,4 @@
-function [pdat hfit selectTbl CoeffTable NeuTblAll] =getdatafortable(fileName, monkey, behaviorOnly, UnitUse)
+function [pdat hfit selectTbl CoeffTable NeuTblAll HCLCoeffs HCSCoeffs] =getdatafortable(fileName, monkey, behaviorOnly, UnitUse)
 
 datastruct = getADPODR_dataFromFIRA(fileName, monkey, behaviorOnly);
 
@@ -253,5 +253,34 @@ for u = 1:length(UseUnitName)
 end
 
 %%
+HCLCoeffs = [];
+HCSCoeffs = [];
+for u = 1:length(UseUnitName)
+    decSumSpikes = sum(allBinnedSpikes{u}(Lgood,decbin),2);
+    decSpikesPerSec = decSumSpikes./length(decbin)./0.1;
+    for hh = 1:length(hazards)
+        decFRh = decSpikesPerSec(Hs==hazards(hh));
+        
+        HCL = CueLoc(Hs==hazards(hh));        
+        mdl2 = fitlm(HCL,decFRh);
+        coefs2 = mdl2.Coefficients.Estimate;
+        varnames2 = mdl2.CoefficientNames;
+        tbladd2 = table(repmat(hazards(hh),2,1),string(varnames2'),coefs2);
+        HCLCoeffs = vertcat(HCLCoeffs,tbladd2);
+        
+        HCS = CueSw(Hs==hazards(hh));
+        mdl3 = fitlm(HCS,decFRh);
+        coefs3 = mdl3.Coefficients.Estimate;
+        varnames3 = mdl3.CoefficientNames;
+        tbladd3 = table(repmat(hazards(hh),2,1),string(varnames3'),coefs3);
+        HCSCoeffs = vertcat(HCSCoeffs,tbladd3);
+        
+        
+    end
+    
+   clear decSumSpikes mdl2 mdl3 decFRh 
+    
+end
+
 
 end
